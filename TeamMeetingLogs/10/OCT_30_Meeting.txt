@@ -1,0 +1,7 @@
+Minutes: Today we met right before lab from 2:00 - 3:00PM 
+
+Summary: Today we talked about the structure of the project and specifically the timeline in which we want items to be completed. 
+We made decisions on what epics and we want to include in addition to the lab required one. 
+We established the project structure for working directories to be able to start work on certain features and user stories. 
+We gave each group member an action items/tasks to perform which are all located and assigned on the github board. 
+Our follow up items are the current actions items which we will follow up on before our next TA meeting.
