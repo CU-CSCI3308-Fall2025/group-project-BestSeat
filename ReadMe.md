@@ -40,7 +40,7 @@
 
 
 ## Docker Commands
-Start Docker: docker compose up -d
-End Docker: docker compose down
-Start postgres: docker compose exec db psql -U postgres
+Start Docker: docker compose up -d  
+End Docker: docker compose down  
+Start postgres: docker compose exec db psql -U postgres  
                 \c bestseat_db
