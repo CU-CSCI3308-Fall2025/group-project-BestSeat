@@ -1,0 +1,16 @@
+Minutes: Today we met on Tuesday from 2:30 - 2:45 PM
+
+Summary: 
+
+Intro - shared git repo in chat
+Jen goes around and asks what each person has done
+Eyal - we finished our main idea, wireframes. Weren't able to divide responsibilities due to time conflict.
+Bryce - Wanting to build a skeleton, understand our outline.
+Tate split who is responsible for each page.
+Understanding API calls - ticketmaster, StubHub, viagogo, SeatGeek.
+Group split:
+Kyle front-end, css
+Eyal docker, env, db
+Bryce - API calls, sql
+Tate Scrum, front-end
+Jen - explains steps in class for next week
