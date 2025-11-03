@@ -126,6 +126,21 @@ app.post('/login', async (req, res) => {
     }
 });
 
+//search route
+app.get('/search', (req, res) => {
+  res.render('pages/search', { isSearchPage: true });
+});
+
+//profile route
+app.get('/profile', (req, res) => {
+  res.render('pages/profile', { isProfilePage: true });
+});
+
+
+//comparisons route
+app.get('/comparisons', (req, res) => {
+  res.render('pages/comparisons', { isComparisonsPage: true });
+});
 
 
 
@@ -156,6 +171,10 @@ app.get('/discover', async (req, res) => {
     console.error(error);
     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
   }
+});
+
+app.get('/login', (req, res) => {
+  res.render('pages/login', { isLoginPage: true });
 });
 
 
