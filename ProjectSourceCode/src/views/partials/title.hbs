@@ -1,5 +1,9 @@
-{{#if first_name}}
-  <title> {{first_name}} - BestSeat </title>
-  {{else}}
-  <title> BestSeat </title>
+{{#if isRegisterPage}}
+<title>Sign Up for BestSeat - Create Your Account</title>
+{{else if isLoginPage}}
+<title>Login to BestSeat - Access Your Account</title>
+{{else if first_name}}
+<title>{{first_name}}'s Dashboard | BestSeat</title>
+{{else}}
+<title>BestSeat - Find Your Perfect Event Seats</title>
 {{/if}}

@@ -1,8 +1,12 @@
 <header>
-  <nav class="navbar navbar-expand-sm border-bottom">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <div class="container">
+      <a class="navbar-brand" href="/discover">
+        <i class="fas fa-home"></i> BestSeat
+      </a>
+
       <button
-        class="navbar-toggler ms-auto"
+        class="navbar-toggler"
         type="button"
         data-bs-toggle="collapse"
         data-bs-target="#navbar-collapse"
@@ -12,14 +16,27 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbar-collapse">
-        <ul class="navbar-nav me-auto">
+        <form class="d-flex mx-auto w-50">
+          <div class="input-group">
+            <input 
+              type="search" 
+              class="form-control" 
+              placeholder="Search events..." 
+              aria-label="Search"
+            >
+            <button class="btn btn-outline-primary" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </form>
+
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="/discover">Home</a>
+            <a class="nav-link" href="/profile">
+              <i class="fas fa-user-circle"></i> Profile
+            </a>
           </li>
         </ul>
-        <div class="nav-item me-1">
-          <a class="nav-link" href="/logout">Account</a>
-        </div>
       </div>
     </div>
   </nav>
