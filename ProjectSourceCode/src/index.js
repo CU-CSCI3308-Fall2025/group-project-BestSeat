@@ -131,7 +131,7 @@ app.post('/login', async (req, res) => {
 
 // Authentication Middleware.
 const auth = (req, res, next) => {
-  if (!req.session.user) 
+  if (!req.session.user)
     return res.redirect('/login');
   next();
 };
@@ -140,7 +140,7 @@ app.use(auth);
 
 
 
-app.get('/discover', async (req, res) => {
+app.get('/search', async (req, res) => {
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
