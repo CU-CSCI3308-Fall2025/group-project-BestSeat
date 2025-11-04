@@ -1,0 +1,12 @@
+Minutes: Today we met on Tuesday from 2:30 - 2:42 PM
+
+Summary:
+
+Intro - Jen explains this meeting's evaluations
+Demo - Tate presents front end progress
+No progress on Project notes
+Tate presents our updated proejct board
+For next week: Verbal notes, demos on main branch
+Bryce - Currently building normalization table, working on 3 endpoint. Next week - expand data from ticketmaster.
+Tate - completed login UI and nav bar. Next week - continue implementing UI.
+Eyal - Finished user db and login/register requests. Next week - working with Bryce on new API point. 
