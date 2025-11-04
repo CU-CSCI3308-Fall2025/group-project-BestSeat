@@ -75,75 +75,82 @@ app.use(
 // *****************************************************
 
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  res.render('pages/login');
 });
 
-
-
-
-
-
-
+//Register Route
 app.get('/register', (req, res) => {
-  res.render('pages/register');
+  res.render('pages/register', { isRegisterPage: true });
 });
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
-  try {
-    await db.none('INSERT INTO users(username, password) VALUES($1, $2)', [
-      req.body.username,
-      hash,
-    ]);
+  let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
+  try 
+  {
+    await db.any(query, [req.body.username, hash]);
     res.redirect('/login');
-  } catch (err) {
-    console.error(err);
-    res.render('pages/register', { message: 'Registration failed.', error: true });
+  }
+  catch(err)
+  {
+    res.status(400).json({message: err.message});
+    res.redirect('/register');
   }
 });
 
-
-
-
-
-
-
+//Login Route
 app.get('/login', (req, res) => {
-  res.render('pages/login');
+  res.render('pages/login', { isLoginPage: true });
 });
 
 app.post('/login', async (req, res) => {
-  try {
-    const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [
-      req.body.username,
-    ]);
-    if (!user) return res.redirect('/register');
+  let query = `SELECT * FROM users WHERE email = $1;`;
+  let user = await db.oneOrNone(query, [req.body.username]);
+  if(!user)
+    {
+        res.redirect('pages/register', {error: "User not found"});
+    }
+    else
+    {
+      const match = await bcrypt.compare(req.body.password, user.pass);
+      if(match)
+      {
+          res.redirect('pages/home');
+          req.session.user = user;
+          req.session.save();
+      }
+      else
+      {
+          res.render('pages/login', {error: "Invalid password"});
+      }
+    }
+});
 
-    const match = await bcrypt.compare(req.body.password, user.password);
-    if (!match)
-      return res.render('pages/login', { message: 'Incorrect username or password.', error: true });
+//search route
+app.get('/search', (req, res) => {
+  res.render('pages/search', { isSearchPage: true });
+});
 
-    req.session.user = user;
-    req.session.save();
-    res.redirect('/discover');
-  } catch (err) {
-    console.error(err);
-    res.render('pages/login', { message: 'Login failed.', error: true });
-  }
+//profile route
+app.get('/profile', (req, res) => {
+  res.render('pages/profile', { isProfilePage: true });
+});
+
+
+//comparisons route
+app.get('/comparisons', (req, res) => {
+  res.render('pages/comparisons', { isComparisonsPage: true });
 });
 
 
 
-
-
+// Authentication Middleware.
 const auth = (req, res, next) => {
   if (!req.session.user) 
     return res.redirect('/login');
   next();
 };
 app.use(auth);
-
-
 
 
 
@@ -164,6 +171,10 @@ app.get('/discover', async (req, res) => {
     console.error(error);
     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
   }
+});
+
+app.get('/login', (req, res) => {
+  res.render('pages/login', { isLoginPage: true });
 });
 
 
