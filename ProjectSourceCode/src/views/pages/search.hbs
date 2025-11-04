@@ -1,0 +1,38 @@
+{{> navbar}}
+{{> message}}
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">Discover Events</h2>
+
+  {{#if results.length}}
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {{#each results}}
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <img
+              src="{{#if images.[0].url}}{{images.[0].url}}{{else}}/images/default_event.jpg{{/if}}"
+              class="card-img-top"
+              alt="{{name}}"
+            />
+            <div class="card-body">
+              <h5 class="card-title">{{name}}</h5>
+
+              {{#if dates.start.localDate}}
+                <p class="card-text">
+                  <strong>Date:</strong> {{dates.start.localDate}}
+                  {{#if dates.start.localTime}} at {{dates.start.localTime}}{{/if}}
+                </p>
+              {{/if}}
+            </div>
+            <div class="card-footer text-center">
+              <a href="{{url}}" target="_blank" class="btn btn-primary">Book Now</a>
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  {{else}}
+    <div class="alert alert-warning text-center">
+      No events found. Try again later.
+    </div>
+  {{/if}}
+</div>
