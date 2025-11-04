@@ -80,61 +80,52 @@ app.get('/', (req, res) => {
 
 //Register Route
 app.get('/register', (req, res) => {
-  res.render('pages/register', { isRegisterPage: true });
+  res.render('pages/register');
 });
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
   let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
-  try {
+  try 
+  {
     await db.any(query, [req.body.username, hash]);
     res.redirect('/login');
   }
-  catch (err) {
-    res.status(400).json({ message: err.message });
+  catch(err)
+  {
+    res.status(400).json({message: err.message});
     res.redirect('/register');
   }
 });
 
 //Login Route
 app.get('/login', (req, res) => {
-  res.render('pages/login', { isLoginPage: true });
+  res.render('pages/login');
 });
 
 app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
   let user = await db.oneOrNone(query, [req.body.username]);
-  if (!user) {
-    res.redirect('pages/register', { error: "User not found" });
-  }
-  else {
-    const match = await bcrypt.compare(req.body.password, user.pass);
-    if (match) {
-      res.redirect('pages/home');
-      req.session.user = user;
-      req.session.save();
+  if(!user)
+    {
+        res.redirect('pages/register', {error: "User not found"});
     }
-    else {
-      res.render('pages/login', { error: "Invalid password" });
+    else
+    {
+      const match = await bcrypt.compare(req.body.password, user.pass);
+      if(match)
+      {
+          res.redirect('pages/home');
+          req.session.user = user;
+          req.session.save();
+      }
+      else
+      {
+          res.render('pages/login', {error: "Invalid password"});
+      }
     }
-  }
 });
 
-//search route
-app.get('/search', (req, res) => {
-  res.render('pages/search', { isSearchPage: true });
-});
-
-//profile route
-app.get('/profile', (req, res) => {
-  res.render('pages/profile', { isProfilePage: true });
-});
-
-
-//comparisons route
-app.get('/comparisons', (req, res) => {
-  res.render('pages/comparisons', { isComparisonsPage: true });
-});
 
 
 
@@ -160,15 +151,11 @@ app.get('/search', async (req, res) => {
         size: 10,
       },
     });
-    res.render('pages/search', { results: results.data._embedded.events });
+    res.render('pages/discover', { results: results.data._embedded.events });
   } catch (error) {
     console.error(error);
-    res.render('pages/search', { results: [], message: 'Error loading events', error: true });
+    res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
   }
-});
-
-app.get('/login', (req, res) => {
-  res.render('pages/login', { isLoginPage: true });
 });
 
 
