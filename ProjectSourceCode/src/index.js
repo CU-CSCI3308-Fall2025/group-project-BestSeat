@@ -91,7 +91,7 @@ app.post('/register', async (req, res) => {
     res.redirect('/login');
   }
   catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({message: err.message});
     res.redirect('/register');
   }
 });
@@ -105,17 +105,18 @@ app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
   let user = await db.oneOrNone(query, [req.body.username]);
   if (!user) {
-    res.redirect('pages/register', { error: "User not found" });
+    res.redirect('pages/register', {error: "User not found"});
   }
-  else {
+  else
+  {
     const match = await bcrypt.compare(req.body.password, user.pass);
     if (match) {
-      res.redirect('pages/home');
+      res.redirect('pages/search');
       req.session.user = user;
       req.session.save();
     }
     else {
-      res.render('pages/login', { error: "Invalid password" });
+      res.render('pages/login', {error: "Invalid password"});
     }
   }
 });
@@ -149,7 +150,7 @@ app.use(auth);
 
 
 
-app.get('/search', async (req, res) => {
+app.get('/discover', async (req, res) => {
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
@@ -160,15 +161,11 @@ app.get('/search', async (req, res) => {
         size: 10,
       },
     });
-    res.render('pages/search', { results: results.data._embedded.events });
+    res.render('pages/discover', { results: results.data._embedded.events });
   } catch (error) {
     console.error(error);
-    res.render('pages/search', { results: [], message: 'Error loading events', error: true });
+    res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
   }
-});
-
-app.get('/login', (req, res) => {
-  res.render('pages/login', { isLoginPage: true });
 });
 
 
