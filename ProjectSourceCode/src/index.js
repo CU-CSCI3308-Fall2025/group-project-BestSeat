@@ -131,6 +131,19 @@ app.get('/search', (req, res) => {
   res.render('pages/search', { isSearchPage: true });
 });
 
+app.post('/search', async (req, res) => {
+  const searchTerm = req.body.searchTerm;
+  const results = await axios({
+      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+      method: 'GET',
+      params: {
+        apikey: process.env.API_KEY,
+        keyword: searchTerm,
+        size: 30,
+      }
+    });
+});
+
 //profile route
 app.get('/profile', (req, res) => {
   res.render('pages/profile', { isProfilePage: true });
