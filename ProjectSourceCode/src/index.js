@@ -141,6 +141,7 @@ app.use(auth);
 
 
 app.get('/search', async (req, res) => {
+  res.render('pages/search');
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
@@ -157,6 +158,16 @@ app.get('/search', async (req, res) => {
     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
   }
 });
+
+app.get('/discover', (req, res) => {
+  res.render('pages/discover');
+});
+
+app.get('/profile', (req, res) => {
+  res.render('pages/profile');
+});
+
+
 
 
 
