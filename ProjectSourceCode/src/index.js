@@ -141,7 +141,7 @@ app.use(auth);
 
 
 app.get('/search', async (req, res) => {
-  res.render('pages/search');
+  res.render('pages/search', { isComparisonsPage: true });
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
@@ -159,14 +159,16 @@ app.get('/search', async (req, res) => {
   }
 });
 
-app.get('/discover', (req, res) => {
-  res.render('pages/discover');
-});
-
+//profile route
 app.get('/profile', (req, res) => {
-  res.render('pages/profile');
+  res.render('pages/profile', { isProfilePage: true });
 });
 
+
+//comparisons route
+app.get('/comparisons', (req, res) => {
+  res.render('pages/comparisons', { isComparisonsPage: true });
+});
 
 
 
@@ -177,7 +179,9 @@ app.get('/logout', (req, res) => {
   });
 });
 
-
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
 
 
 
@@ -185,5 +189,5 @@ app.get('/logout', (req, res) => {
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
+module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');
