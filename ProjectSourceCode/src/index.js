@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
 
 //Register Route
 app.get('/register', (req, res) => {
-  res.render('pages/register', { isRegisterPage: true });
+  res.render('pages/register');
 });
 
 app.post('/register', async (req, res) => {
@@ -100,7 +100,7 @@ app.post('/register', async (req, res) => {
 
 //Login Route
 app.get('/login', (req, res) => {
-  res.render('pages/login', { isLoginPage: true });
+  res.render('pages/login');
 });
 
 app.post('/login', async (req, res) => {
@@ -115,7 +115,7 @@ app.post('/login', async (req, res) => {
       const match = await bcrypt.compare(req.body.password, user.pass);
       if(match)
       {
-          res.redirect('pages/home');
+          res.redirect('pages/search');
           req.session.user = user;
           req.session.save();
       }
@@ -126,27 +126,12 @@ app.post('/login', async (req, res) => {
     }
 });
 
-//search route
-app.get('/search', (req, res) => {
-  res.render('pages/search', { isSearchPage: true });
-});
-
-//profile route
-app.get('/profile', (req, res) => {
-  res.render('pages/profile', { isProfilePage: true });
-});
-
-
-//comparisons route
-app.get('/comparisons', (req, res) => {
-  res.render('pages/comparisons', { isComparisonsPage: true });
-});
 
 
 
 // Authentication Middleware.
 const auth = (req, res, next) => {
-  if (!req.session.user) 
+  if (!req.session.user)
     return res.redirect('/login');
   next();
 };
@@ -155,7 +140,8 @@ app.use(auth);
 
 
 
-app.get('/discover', async (req, res) => {
+app.get('/search', async (req, res) => {
+  res.render('pages/search', { isComparisonsPage: true });
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
@@ -173,9 +159,17 @@ app.get('/discover', async (req, res) => {
   }
 });
 
-app.get('/login', (req, res) => {
-  res.render('pages/login', { isLoginPage: true });
+//profile route
+app.get('/profile', (req, res) => {
+  res.render('pages/profile', { isProfilePage: true });
 });
+
+
+//comparisons route
+app.get('/comparisons', (req, res) => {
+  res.render('pages/comparisons', { isComparisonsPage: true });
+});
+
 
 
 
@@ -185,7 +179,9 @@ app.get('/logout', (req, res) => {
   });
 });
 
-
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
 
 
 
@@ -193,5 +189,5 @@ app.get('/logout', (req, res) => {
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
+module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');
