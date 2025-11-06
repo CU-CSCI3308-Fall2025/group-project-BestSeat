@@ -80,19 +80,17 @@ app.get('/', (req, res) => {
 
 //Register Route
 app.get('/register', (req, res) => {
-  res.render('pages/register');
+  res.render('pages/register', { isRegisterPage: true });
 });
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
   let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
-  try 
-  {
+  try {
     await db.any(query, [req.body.username, hash]);
     res.redirect('/login');
   }
-  catch(err)
-  {
+  catch (err) {
     res.status(400).json({message: err.message});
     res.redirect('/register');
   }
@@ -100,28 +98,44 @@ app.post('/register', async (req, res) => {
 
 //Login Route
 app.get('/login', (req, res) => {
-  res.render('pages/login');
+  res.render('pages/login', { isLoginPage: true });
 });
 
 app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
   let user = await db.oneOrNone(query, [req.body.username]);
   if (!user) {
-    res.redirect('pages/register', { error: "User not found" });
+    res.redirect('pages/register', {error: "User not found"});
   }
-  else {
+  else
+  {
     const match = await bcrypt.compare(req.body.password, user.pass);
     if (match) {
-      res.redirect('pages/home');
+      res.redirect('pages/search');
       req.session.user = user;
       req.session.save();
     }
     else {
-      res.render('pages/login', { error: "Invalid password" });
+      res.render('pages/login', {error: "Invalid password"});
     }
   }
 });
 
+//search route
+app.get('/search', (req, res) => {
+  res.render('pages/search', { isSearchPage: true });
+});
+
+//profile route
+app.get('/profile', (req, res) => {
+  res.render('pages/profile', { isProfilePage: true });
+});
+
+
+//comparisons route
+app.get('/comparisons', (req, res) => {
+  res.render('pages/comparisons', { isComparisonsPage: true });
+});
 
 
 
@@ -136,7 +150,7 @@ app.use(auth);
 
 
 
-app.get('/search', async (req, res) => {
+app.get('/discover', async (req, res) => {
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
@@ -154,10 +168,6 @@ app.get('/search', async (req, res) => {
   }
 });
 
-app.get('/login', (req, res) => {
-  res.render('pages/login', { isLoginPage: true });
-});
-
 
 
 app.get('/logout', (req, res) => {
@@ -166,9 +176,7 @@ app.get('/logout', (req, res) => {
   });
 });
 
-app.get('/welcome', (req, res) => {
-  res.json({status: 'success', message: 'Welcome!'});
-});
+
 
 
 
@@ -176,5 +184,5 @@ app.get('/welcome', (req, res) => {
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-module.exports = app.listen(3000);
+app.listen(3000);
 console.log('Server is listening on port 3000');
