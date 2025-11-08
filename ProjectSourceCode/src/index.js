@@ -126,36 +126,37 @@ app.post('/login', async (req, res) => {
     }
 });
 
-
-
-
-// Authentication Middleware.
-const auth = (req, res, next) => {
-  if (!req.session.user)
-    return res.redirect('/login');
-  next();
-};
-app.use(auth);
-
-
-
+//search route
+app.get('/search', (req, res) => {
+  res.render('pages/search', { isSearchPage: true });
+});
 
 app.get('/search', async (req, res) => {
-  res.render('pages/search', { isComparisonsPage: true });
-  try {
+  const searchTerm = req.body.searchTerm;
+  try
+  {
     const results = await axios({
-      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-      method: 'GET',
-      params: {
-        apikey: process.env.API_KEY,
-        keyword: 'edm',
-        size: 10,
-      },
-    });
-    res.render('pages/discover', { results: results.data._embedded.events });
-  } catch (error) {
+        url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+        method: 'GET',
+        params: {
+          apikey: process.env.API_KEY,
+          keyword: searchTerm,
+          size: 30,
+        }
+      });
+    if(!results.data._embedded || !results.data._embedded.events)
+    {
+      return res.render('pages/search', { results: [], message: 'No events found', isSearchPage: true });
+    }
+    else
+    {
+      res.render('pages/search', { results: results.data._embedded.events, isSearchPage: true });
+    }
+  }
+  catch(error)
+  {
     console.error(error);
-    res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
+    res.render('pages/search', { results: [], message: 'Error loading events', error: true });
   }
 });
 
@@ -170,6 +171,36 @@ app.get('/comparisons', (req, res) => {
   res.render('pages/comparisons', { isComparisonsPage: true });
 });
 
+
+
+// Authentication Middleware.
+const auth = (req, res, next) => {
+  if (!req.session.user)
+    return res.redirect('/login');
+  next();
+};
+app.use(auth);
+
+
+
+
+// app.get('/discover', async (req, res) => {
+//   try {
+//     const results = await axios({
+//       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+//       method: 'GET',
+//       params: {
+//         apikey: process.env.API_KEY,
+//         keyword: 'edm',
+//         size: 10,
+//       },
+//     });
+//     res.render('pages/discover', { results: results.data._embedded.events });
+//   } catch (error) {
+//     console.error(error);
+//     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
+//   }
+// });
 
 
 
