@@ -88,7 +88,7 @@ app.post('/register', async (req, res) => {
   let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
   try 
   {
-    await db.any(query, [req.body.username, hash]);
+    await db.any(query, [req.body.email, hash]);
     res.redirect('/login');
   }
   catch(err)
@@ -105,7 +105,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
-  let user = await db.oneOrNone(query, [req.body.username]);
+  let user = await db.oneOrNone(query, [req.body.email]);
   if(!user)
     {
         res.redirect('pages/register', {error: "User not found"});
@@ -126,13 +126,9 @@ app.post('/login', async (req, res) => {
     }
 });
 
-//search route
-app.get('/search', (req, res) => {
-  res.render('pages/search', { isSearchPage: true });
-});
 
 app.get('/search', async (req, res) => {
-  const searchTerm = req.body.searchTerm;
+  const searchTerm = req.query.searchTerm || '';
   try
   {
     const results = await axios({
