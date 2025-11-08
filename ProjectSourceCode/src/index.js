@@ -131,17 +131,33 @@ app.get('/search', (req, res) => {
   res.render('pages/search', { isSearchPage: true });
 });
 
-app.post('/search', async (req, res) => {
+app.get('/search', async (req, res) => {
   const searchTerm = req.body.searchTerm;
-  const results = await axios({
-      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-      method: 'GET',
-      params: {
-        apikey: process.env.API_KEY,
-        keyword: searchTerm,
-        size: 30,
-      }
-    });
+  try
+  {
+    const results = await axios({
+        url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+        method: 'GET',
+        params: {
+          apikey: process.env.API_KEY,
+          keyword: searchTerm,
+          size: 30,
+        }
+      });
+    if(!results.data._embedded || !results.data._embedded.events)
+    {
+      return res.render('pages/search', { results: [], message: 'No events found', isSearchPage: true });
+    }
+    else
+    {
+      res.render('pages/search', { results: results.data._embedded.events, isSearchPage: true });
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    res.render('pages/search', { results: [], message: 'Error loading events', error: true });
+  }
 });
 
 //profile route
@@ -168,23 +184,23 @@ app.use(auth);
 
 
 
-app.get('/discover', async (req, res) => {
-  try {
-    const results = await axios({
-      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-      method: 'GET',
-      params: {
-        apikey: process.env.API_KEY,
-        keyword: 'edm',
-        size: 10,
-      },
-    });
-    res.render('pages/discover', { results: results.data._embedded.events });
-  } catch (error) {
-    console.error(error);
-    res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
-  }
-});
+// app.get('/discover', async (req, res) => {
+//   try {
+//     const results = await axios({
+//       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+//       method: 'GET',
+//       params: {
+//         apikey: process.env.API_KEY,
+//         keyword: 'edm',
+//         size: 10,
+//       },
+//     });
+//     res.render('pages/discover', { results: results.data._embedded.events });
+//   } catch (error) {
+//     console.error(error);
+//     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
+//   }
+// });
 
 
 
