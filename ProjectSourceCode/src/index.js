@@ -80,17 +80,19 @@ app.get('/', (req, res) => {
 
 //Register Route
 app.get('/register', (req, res) => {
-  res.render('pages/register', { isRegisterPage: true });
+  res.render('pages/register');
 });
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
   let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
-  try {
-    await db.any(query, [req.body.username, hash]);
+  try 
+  {
+    await db.any(query, [req.body.email, hash]);
     res.redirect('/login');
   }
-  catch (err) {
+  catch(err)
+  {
     res.status(400).json({message: err.message});
     res.redirect('/register');
   }
@@ -98,32 +100,60 @@ app.post('/register', async (req, res) => {
 
 //Login Route
 app.get('/login', (req, res) => {
-  res.render('pages/login', { isLoginPage: true });
+  res.render('pages/login');
 });
 
 app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
-  let user = await db.oneOrNone(query, [req.body.username]);
-  if (!user) {
-    res.redirect('pages/register', {error: "User not found"});
-  }
-  else
-  {
-    const match = await bcrypt.compare(req.body.password, user.pass);
-    if (match) {
-      res.redirect('pages/search');
-      req.session.user = user;
-      req.session.save();
+  let user = await db.oneOrNone(query, [req.body.email]);
+  if(!user)
+    {
+        res.redirect('pages/register', {error: "User not found"});
     }
-    else {
-      res.render('pages/login', {error: "Invalid password"});
+    else
+    {
+      const match = await bcrypt.compare(req.body.password, user.pass);
+      if(match)
+      {
+          res.redirect('pages/search');
+          req.session.user = user;
+          req.session.save();
+      }
+      else
+      {
+          res.render('pages/login', {error: "Invalid password"});
+      }
     }
-  }
 });
 
-//search route
-app.get('/search', (req, res) => {
-  res.render('pages/search', { isSearchPage: true });
+
+app.get('/search', async (req, res) => {
+  const searchTerm = req.query.searchTerm || '';
+  try
+  {
+    const results = await axios({
+        url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+        method: 'GET',
+        params: {
+          apikey: process.env.API_KEY,
+          keyword: searchTerm,
+          size: 30,
+        }
+      });
+    if(!results.data._embedded || !results.data._embedded.events)
+    {
+      return res.render('pages/search', { results: [], message: 'No events found', isSearchPage: true });
+    }
+    else
+    {
+      res.render('pages/search', { results: results.data._embedded.events, isSearchPage: true });
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    res.render('pages/search', { results: [], message: 'Error loading events', error: true });
+  }
 });
 
 //profile route
@@ -150,23 +180,23 @@ app.use(auth);
 
 
 
-app.get('/discover', async (req, res) => {
-  try {
-    const results = await axios({
-      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-      method: 'GET',
-      params: {
-        apikey: process.env.API_KEY,
-        keyword: 'edm',
-        size: 10,
-      },
-    });
-    res.render('pages/discover', { results: results.data._embedded.events });
-  } catch (error) {
-    console.error(error);
-    res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
-  }
-});
+// app.get('/discover', async (req, res) => {
+//   try {
+//     const results = await axios({
+//       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+//       method: 'GET',
+//       params: {
+//         apikey: process.env.API_KEY,
+//         keyword: 'edm',
+//         size: 10,
+//       },
+//     });
+//     res.render('pages/discover', { results: results.data._embedded.events });
+//   } catch (error) {
+//     console.error(error);
+//     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
+//   }
+// });
 
 
 
@@ -176,7 +206,9 @@ app.get('/logout', (req, res) => {
   });
 });
 
-
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
 
 
 
@@ -184,5 +216,5 @@ app.get('/logout', (req, res) => {
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
+module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');

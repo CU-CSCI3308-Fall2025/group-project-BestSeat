@@ -5,31 +5,15 @@
         <i class="fas fa-home"></i> BestSeat
       </a>
 
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbar-collapse"
-        aria-controls="navbar"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-        onclick="window.location.href='/search';"
-      >
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse"
+        aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <div class="collapse navbar-collapse" id="navbar-collapse">
-        <form 
-          class="d-flex mx-auto w-50" 
-          onsubmit="event.preventDefault(); window.location.href='/search';"
-        >
+        <form class="d-flex mx-auto w-50" action="/search" method="GET">
           <div class="input-group">
-            <input 
-              type="search" 
-              class="form-control" 
-              placeholder="Search events..." 
-              aria-label="Search"
-            >
+            <input type="search" name="searchTerm" class="form-control" placeholder="Search events..."
+              aria-label="Search">
             <button class="btn btn-outline-primary" type="submit">
               <i class="fas fa-search"></i>
             </button>
