@@ -175,7 +175,7 @@ app.get('/comparisons', (req, res) => {
 
 // Authentication Middleware.
 const auth = (req, res, next) => {
-  if (!req.session.user) 
+  if (!req.session.user)
     return res.redirect('/login');
   next();
 };
@@ -184,6 +184,7 @@ app.use(auth);
 
 
 
+<<<<<<< HEAD
 // app.get('/discover', async (req, res) => {
 //   try {
 //     const results = await axios({
@@ -202,6 +203,39 @@ app.use(auth);
 //   }
 // });
 
+=======
+app.get('/search', async (req, res) => {
+  res.render('pages/search', { isComparisonsPage: true });
+  try {
+    const results = await axios({
+      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+      method: 'GET',
+      params: {
+        apikey: process.env.API_KEY,
+        keyword: 'edm',
+        size: 10,
+      },
+    });
+    res.render('pages/discover', { results: results.data._embedded.events });
+  } catch (error) {
+    console.error(error);
+    res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
+  }
+});
+
+//profile route
+app.get('/profile', (req, res) => {
+  res.render('pages/profile', { isProfilePage: true });
+});
+
+
+//comparisons route
+app.get('/comparisons', (req, res) => {
+  res.render('pages/comparisons', { isComparisonsPage: true });
+});
+
+
+>>>>>>> main
 
 
 app.get('/logout', (req, res) => {
@@ -210,7 +244,9 @@ app.get('/logout', (req, res) => {
   });
 });
 
-
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
 
 
 
@@ -218,5 +254,5 @@ app.get('/logout', (req, res) => {
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
+module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');
