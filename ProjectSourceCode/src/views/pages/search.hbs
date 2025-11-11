@@ -25,6 +25,10 @@
 
           <form method="GET" action="/search">
             <div class="mb-3">
+              <label for="searchTerm" class="form-label">Search Events</label>
+              <input type="text" class="form-control" id="searchTerm" name="searchTerm" placeholder="Enter event name or keyword" value="{{searchTerm}}">
+            </div>
+            <div class="mb-3">
               <label class="form-label">Website Source</label><br>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="source" value="Ticketmaster" id="ticketmaster">
