@@ -12,3 +12,6 @@ UI is now more visually appealing and matches our wireframe proposal.
 Front end is built for both comparisons and profile pages using handlebars
 Users can search for events through the navbar by entering thier own keyword 
 Users can see thier profile page when clicking on the navbar icon
+Implemented comprehensive data normalization system for event data from multiple potential API sources
+Normalized event data includes venue details, pricing, date/time, images, classifications, sales info, and accessibility
+Moved authentication middleware to protect additional routes such as discover and search
