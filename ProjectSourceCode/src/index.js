@@ -153,62 +153,6 @@ function normalizeTicketmasterEvent(event) {
   };
 }
 
-/**
- * Normalizes ticket listing data from different providers
- */
-function normalizeListingData(listingData, source, eventId) {
-  if (source === 'ticketmaster') {
-    return normalizeTicketmasterListing(listingData, eventId);
-  }
-  // Future providers to be added here
-  
-  return {
-    event_id: eventId,
-    data_source: source,
-    provider_url: listingData.url || null,
-  };
-}
-
-/**
- * Normalizes Ticketmaster listing data
- */
-function normalizeTicketmasterListing(event, eventId) {
-  const priceRanges = event.priceRanges?.[0] || {};
-  
-  return {
-    // === Identifiers ===
-    event_id: eventId,
-    listing_id: event.id,
-    data_source: 'ticketmaster',
-    
-    // === Event Information ===
-    event_name: event.name,
-    venue_name: event._embedded?.venues?.[0]?.name || null,
-    
-    // === Pricing ===
-    price: {
-      currency: priceRanges.currency || 'USD',
-      min: priceRanges.min || null,
-      max: priceRanges.max || null,
-    },
-    
-    // === Availability ===
-    status: event.dates?.status?.code || 'unknown',
-    available: event.dates?.status?.code === 'onsale',
-    
-    // === Links ===
-    provider_url: event.url || null,
-    
-    // === Date/Time ===
-    event_date: event.dates?.start?.localDate || null,
-    event_time: event.dates?.start?.localTime || null,
-    
-    // === Sales Period ===
-    sales_start: event.sales?.public?.startDateTime || null,
-    sales_end: event.sales?.public?.endDateTime || null,
-  };
-}
-
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
