@@ -1,77 +1,100 @@
 {{> navbar}}
 
-<div class="container mt-4">
-  <h2 class="mb-4 text-center">User Profile</h2>
+<div class="container mt-5">
+  <div class="card p-4 shadow-sm" style="background-color: #f8f9fa;">
+    <h3 class="mb-4 fw-bold">Profile Settings</h3>
 
-  <div class="card mx-auto" style="max-width: 400px;">
-    <div class="card-body text-center">
-      <p class="card-text"><strong>Email:</strong> {{user.email}}</p>
-    </div>
-  </div>
-
-  <div class="card mx-auto mt-4" style="max-width: 600px;">
-    <div class="card-body">
-      <h5 class="card-title">Change Password</h5>
-      <form id="changePasswordForm" method="POST" action="/profile/change-password">
-        <div class="mb-3 row align-items-center">
-          <label for="currentPassword" class="col-sm-4 col-form-label">Current Password</label>
-          <div class="col-sm-8 d-flex">
-            <input type="password" class="form-control me-2" id="currentPassword" name="currentPassword" required>
-            <button type="button" class="btn btn-outline-secondary btn-sm toggle-password"
-              data-target="#currentPassword">Show</button>
-          </div>
-        </div>
-
-        <div class="mb-3 row align-items-center">
-          <label for="newPassword" class="col-sm-4 col-form-label">New Password</label>
-          <div class="col-sm-8 d-flex">
-            <input type="password" class="form-control me-2" id="newPassword" name="newPassword" required>
-            <button type="button" class="btn btn-outline-secondary btn-sm toggle-password"
-              data-target="#newPassword">Show</button>
-          </div>
-        </div>
-
-        <div class="mb-3 row align-items-center">
-          <label for="confirmPassword" class="col-sm-4 col-form-label">Confirm New Password</label>
-          <div class="col-sm-8 d-flex">
-            <input type="password" class="form-control me-2" id="confirmPassword" name="confirmPassword" required>
-            <button type="button" class="btn btn-outline-secondary btn-sm toggle-password"
-              data-target="#confirmPassword">Show</button>
-          </div>
-        </div>
-
-        <div class="text-end">
-          <button type="submit" class="btn btn-primary">Change Password</button>
+    <div class="d-flex flex-column flex-md-row align-items-center mb-4">
+      <img
+        src="{{#if user.profilePicture}}{{user.profilePicture}}{{else}}/images/default_profile.png{{/if}}"
+        alt="{{user.username}}'s Profile Picture"
+        class="rounded mb-3 mb-md-0 me-md-4"
+        style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;"
+      />
+      <form action="/profile/upload-picture" method="POST" enctype="multipart/form-data">
+        <div class="d-flex flex-column">
+          <input type="file" name="profilePicture" accept="image/*" class="form-control mb-2" style="max-width:250px;">
+          <button type="submit" class="btn btn-primary">Upload New Picture</button>
         </div>
       </form>
     </div>
-  </div>
 
-  <div class="mt-4 mx-auto" style="max-width: 900px;">
-    <h3 class="mb-3">Followed Artists / Teams</h3>
+    <div class="mb-4">
+      <strong>Email:</strong> {{user.email}}
+    </div>
+
+    <form class="d-flex align-items-center mb-5" method="POST" action="/profile/update-name">
+      <label for="displayName" class="form-label me-2 fw-semibold mb-0">Display Name</label>
+      <input type="text" id="displayName" name="displayName" class="form-control me-2"
+             value="{{user.displayName}}" style="max-width:300px;">
+      <button type="submit" class="btn btn-success">Save Display Name</button>
+    </form>
+
+    <h5 class="fw-bold mb-3">Followed Artists</h5>
     {{#if user.following}}
-    <div class="row">
-      {{#each user.following}}
-      <div class="col-6 col-md-4 mb-3">
-        <div class="card h-100">
-          <img src="{{#if this.image}}{{this.image}}{{else}}/images/placeholder.png{{/if}}" class="card-img-top"
-            alt="{{this.name}}" style="height:150px; object-fit:cover;">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{this.name}}</h5>
-            {{#if this.type}}<p class="mb-2 text-muted small">{{this.type}}</p>{{/if}}
-            <div class="mt-auto">
-              <a href="{{this.link}}" class="btn btn-outline-primary btn-sm">View on Ticketmaster</a>
+      <div class="row">
+        {{#each user.following}}
+          <div class="col-6 col-md-3 mb-3">
+            <div class="card h-100 position-relative shadow-sm">
+              <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+                      onclick="removeArtist('{{this.id}}')">
+                <i class="fas fa-times"></i>
+              </button>
+              <img src="{{#if this.image}}{{this.image}}{{else}}/images/placeholder.png{{/if}}"
+                   alt="{{this.name}}" class="card-img-top"
+                   style="height:120px; object-fit:cover;">
+              <div class="card-body text-center">
+                <h6 class="card-title mb-0">{{this.name}}</h6>
+                {{#if this.type}}<p class="mb-1 text-muted small">{{this.type}}</p>{{/if}}
+                <a href="{{this.link}}" class="btn btn-outline-primary btn-sm mt-2">View on Ticketmaster</a>
+              </div>
             </div>
           </div>
-        </div>
+        {{/each}}
       </div>
-      {{/each}}
-    </div>
     {{else}}
-    <p class="text-muted">You are not following any artists or teams yet.</p>
+      <p class="text-muted">You are not following any artists.</p>
     {{/if}}
-  </div>
 
+    <div class="card mt-5 mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Change Password</h5>
+        <form id="changePasswordForm" method="POST" action="/profile/change-password">
+          <div class="mb-3 row align-items-center">
+            <label for="currentPassword" class="col-sm-4 col-form-label">Current Password</label>
+            <div class="col-sm-8 d-flex">
+              <input type="password" class="form-control me-2" id="currentPassword" name="currentPassword" required>
+              <button type="button" class="btn btn-outline-secondary btn-sm toggle-password"
+                data-target="#currentPassword">Show</button>
+            </div>
+          </div>
+
+          <div class="mb-3 row align-items-center">
+            <label for="newPassword" class="col-sm-4 col-form-label">New Password</label>
+            <div class="col-sm-8 d-flex">
+              <input type="password" class="form-control me-2" id="newPassword" name="newPassword" required>
+              <button type="button" class="btn btn-outline-secondary btn-sm toggle-password"
+                data-target="#newPassword">Show</button>
+            </div>
+          </div>
+
+          <div class="mb-3 row align-items-center">
+            <label for="confirmPassword" class="col-sm-4 col-form-label">Confirm New Password</label>
+            <div class="col-sm-8 d-flex">
+              <input type="password" class="form-control me-2" id="confirmPassword" name="confirmPassword" required>
+              <button type="button" class="btn btn-outline-secondary btn-sm toggle-password"
+                data-target="#confirmPassword">Show</button>
+            </div>
+          </div>
+
+          <div class="text-end">
+            <button type="submit" class="btn btn-primary">Change Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -88,6 +111,15 @@
       e.target.textContent = 'Show';
     }
   });
+
+  function removeArtist(artistId) {
+    if (confirm("Are you sure you want to unfollow this artist?")) {
+      fetch(`/profile/unfollow/${artistId}`, { method: "POST" })
+        .then(res => res.json())
+        .then(() => location.reload())
+        .catch(err => console.error(err));
+    }
+  }
 </script>
 
 {{> message}}
