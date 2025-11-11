@@ -1,0 +1,103 @@
+# BestSeat - User Acceptance Test Plan
+
+---
+
+## Feature 1: User Registration
+
+### Feature Description
+New users can create an account by providing an email address and password. Passwords are securely hashed before storage.
+
+### Prerequisites
+- Application is running on `localhost:3000`
+- User does not exist in database
+
+### Test Data
+- **Email:** `testuser@example.com`
+- **Password:** `SecurePass123!`
+
+### Test Steps
+1. Go to `http://localhost:3000`
+2. Click on "Register"
+3. Enter email: `testuser@example.com`
+4. Enter password: `SecurePass123!`
+5. Submit
+
+### Expected Results
+- User is redirected to the login page (`/login`)
+- User is created in the database with hashed password
+- User can verify entry in database:
+  ```sql
+  SELECT * FROM users WHERE email = 'testuser@example.com';
+  ```
+
+### TODO
+**User Testers:**
+
+**Actual Results:**
+
+---
+
+## Feature 2: User Login and Authentication
+
+### Feature Description
+Registered users can log in using their email and password. The system validates credentials and creates a session for authenticated users. Authentication middleware protects routes requiring login.
+
+### Prerequisites
+- Application is running on `localhost:3000`
+- User account exists in database
+
+### Test Data
+- **Email:** `testuser@example.com`
+- **Password:** `SecurePass123!`
+
+### Test Steps
+1. Go to `http://localhost:3000/login`
+2. Enter email: `testuser@example.com`
+3. Enter password: `SecurePass123!`
+4. Login
+
+### Expected Results
+- User is successfully authenticated
+- User is redirected to home or `/discover` page
+- Session is created for the user
+- User can access protected routes (profile, search, etc.)
+
+### TODO
+**User Testers:**
+
+**Actual Results:**
+
+---
+
+## Feature 3: Event Search and Discovery
+
+### Feature Description
+Authenticated users can search for concert events using the Ticketmaster API. The application displays event details including name, date, time, image, and prices.
+
+### Prerequisites
+- Application is running on `localhost:3000`
+- User is logged in with valid session
+- Valid Ticketmaster API key is configured
+- Internet connection is available
+
+### Test Data
+- **API Search Keyword:** "Denver Broncos"
+
+### Test Steps
+1. Login with valid credentials
+2. Navigate to `/search` page
+3. Observe the event listings displayed
+
+### Expected Results
+- Denver Broncos events are displayed
+- Each event card contains:
+  - Event image (or default image if unavailable)
+  - Event name
+  - Event date and time (if available)
+  - Price comparison using other APIs
+- No error messages are displayed
+
+### TODO
+**User Testers:**
+
+**Actual Results:**

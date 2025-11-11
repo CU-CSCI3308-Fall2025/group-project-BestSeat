@@ -1,26 +1,48 @@
 <header>
-  <nav class="navbar navbar-expand-sm border-bottom">
+  <nav class="navbar navbar-expand-lg navbar-light border-bottom fixed-top"
+    style="background-color: #e6e7ea; z-index: 1030;">
     <div class="container">
-      <button
-        class="navbar-toggler ms-auto"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbar-collapse"
-        aria-controls="navbar"
-        aria-expanded="false"
-        aria-label="Toggle navigation">
+      <a class="navbar-brand" href="/search">
+        <i class="fas fa-home"></i> BestSeat
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse"
+        aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation"
+        onclick="window.location.href='/search';">
         <span class="navbar-toggler-icon"></span>
       </button>
+
       <div class="collapse navbar-collapse" id="navbar-collapse">
-        <ul class="navbar-nav me-auto">
+        <form class="d-flex mx-auto w-50" action="/search" method="GET">
+          <div class="input-group">
+            <input type="search" name="searchTerm" class="form-control" placeholder="Search events..."
+              aria-label="Search">
+            <button class="btn btn-light border" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </form>
+
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="/discover">Home</a>
+            <a class="nav-link d-flex align-items-center" href="/profile">
+              {{#if user.profilePicture}}
+              <img src="{{user.profilePicture}}" alt="{{user.username}}'s Profile Picture" class="rounded-circle me-2"
+                style="width:24px; height:24px; object-fit:cover; border:1px solid #ccc;">
+              {{else}}
+              <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
+              {{/if}}
+              Profile
+            </a>
           </li>
         </ul>
-        <div class="nav-item me-1">
-          <a class="nav-link" href="/logout">Account</a>
-        </div>
       </div>
     </div>
   </nav>
 </header>
+
+<style>
+  body {
+    padding-top: 75px;
+  }
+</style>

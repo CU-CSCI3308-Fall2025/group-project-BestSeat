@@ -14,6 +14,214 @@ const bcrypt = require('bcryptjs'); //  To hash passwords
 const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
 
 // *****************************************************
+// <!-- Section 1.5 : API Normalization Helpers -->
+// *****************************************************
+
+/**
+ * Normalizes event data from different API providers into a standard format
+ * @param {Object} eventData - Raw event data from API provider
+ * @param {String} source - The API source ('ticketmaster', 'stubhub', etc.)
+ * @returns {Object} Normalized event object
+ */
+function normalizeEventData(eventData, source) {
+  if (source === 'ticketmaster') {
+    return normalizeTicketmasterEvent(eventData);
+  }
+  // Future providers can be added here
+  // else if (source === 'stubhub') { return normalizeStubhubEvent(eventData); }
+  
+  // Default fallback
+  return {
+    id: eventData.id || null,
+    name: eventData.name || 'Untitled Event',
+    data_source: source,
+  };
+}
+
+/**
+ * Normalizes Ticketmaster event data to our standard format
+ * @param {Object} event - Raw Ticketmaster event object
+ * @returns {Object} Normalized event object
+ */
+function normalizeTicketmasterEvent(event) {
+  // Extract classification data
+  const primaryClassification = event.classifications?.[0] || {};
+  
+  // Extract venue information
+  const venue = event._embedded?.venues?.[0] || {};
+  
+  // Extract date/time information
+  const dates = event.dates?.start || {};
+  
+  // Extract price information
+  const priceRanges = event.priceRanges?.[0] || {};
+  
+  // Extract promoter information
+  const promoter = event.promoter || event.promoters?.[0] || {};
+  
+  return {
+    // === Core Identifiers ===
+    id: event.id,
+    data_source: 'ticketmaster',
+    
+    // === Basic Information ===
+    name: event.name || 'Untitled Event',
+    description: event.info || event.pleaseNote || null,
+    type: event.type || 'event',
+    
+    // === Classification ===
+    category: primaryClassification.segment?.name || null,
+    genre: primaryClassification.genre?.name || null,
+    subGenre: primaryClassification.subGenre?.name || null,
+    
+    // === URLs and Media ===
+    url: event.url || null,
+    images: event.images?.map(img => ({
+      url: img.url,
+      width: img.width,
+      height: img.height,
+      ratio: img.ratio,
+      fallback: img.fallback || false,
+    })) || [],
+    
+    // === Date and Time ===
+    date: {
+      start: dates.localDate || null,
+      time: dates.localTime || null,
+      datetime: dates.dateTime || null,
+      timezone: dates.timezone || null,
+      tba: dates.dateTBA || false,
+      tbd: dates.dateTBD || false,
+      noSpecificTime: dates.noSpecificTime || false,
+    },
+    
+    // === Venue Information ===
+    venue: {
+      id: venue.id || null,
+      name: venue.name || null,
+      address: venue.address?.line1 || null,
+      city: venue.city?.name || null,
+      state: venue.state?.name || null,
+      stateCode: venue.state?.stateCode || null,
+      postalCode: venue.postalCode || null,
+      country: venue.country?.name || null,
+      countryCode: venue.country?.countryCode || null,
+      location: {
+        latitude: venue.location?.latitude || null,
+        longitude: venue.location?.longitude || null,
+      },
+      timezone: venue.timezone || null,
+      url: venue.url || null,
+    },
+    
+    // === Pricing ===
+    pricing: {
+      currency: priceRanges.currency || 'USD',
+      min: priceRanges.min || null,
+      max: priceRanges.max || null,
+      type: priceRanges.type || null,
+    },
+    
+    // === Sales Information ===
+    sales: {
+      public: {
+        startDateTime: event.sales?.public?.startDateTime || null,
+        endDateTime: event.sales?.public?.endDateTime || null,
+      },
+      presales: event.sales?.presales?.map(presale => ({
+        name: presale.name || null,
+        startDateTime: presale.startDateTime || null,
+        endDateTime: presale.endDateTime || null,
+      })) || [],
+    },
+    
+    // === Status ===
+    status: event.dates?.status?.code || 'unknown',
+    
+    // === Additional Information ===
+    accessibility: event.accessibility || null,
+    ageRestrictions: event.ageRestrictions?.legalAgeEnforced || null,
+    seatmap: event.seatmap?.staticUrl || null,
+    promoter: {
+      id: promoter.id || null,
+      name: promoter.name || null,
+    },
+    
+    // === Products (Attractions/Performers) ===
+    attractions: event._embedded?.attractions?.map(attraction => ({
+      id: attraction.id,
+      name: attraction.name,
+      type: attraction.type || null,
+      url: attraction.url || null,
+      image: attraction.images?.[0]?.url || null,
+    })) || [],
+  };
+}
+
+/**
+ * Normalizes ticket listing data from different providers
+ * @param {Object} listingData - Raw listing data from provider
+ * @param {String} source - The provider source
+ * @param {String} eventId - The event ID this listing is for
+ * @returns {Object} Normalized listing object
+ */
+function normalizeListingData(listingData, source, eventId) {
+  if (source === 'ticketmaster') {
+    return normalizeTicketmasterListing(listingData, eventId);
+  }
+  // Future providers can be added here
+  
+  return {
+    event_id: eventId,
+    data_source: source,
+    provider_url: listingData.url || null,
+  };
+}
+
+/**
+ * Normalizes Ticketmaster listing data
+ * @param {Object} event - Ticketmaster event object
+ * @param {String} eventId - Event ID
+ * @returns {Object} Normalized listing object
+ */
+function normalizeTicketmasterListing(event, eventId) {
+  const priceRanges = event.priceRanges?.[0] || {};
+  
+  return {
+    // === Identifiers ===
+    event_id: eventId,
+    listing_id: event.id,
+    data_source: 'ticketmaster',
+    
+    // === Event Information ===
+    event_name: event.name,
+    venue_name: event._embedded?.venues?.[0]?.name || null,
+    
+    // === Pricing ===
+    price: {
+      currency: priceRanges.currency || 'USD',
+      min: priceRanges.min || null,
+      max: priceRanges.max || null,
+    },
+    
+    // === Availability ===
+    status: event.dates?.status?.code || 'unknown',
+    available: event.dates?.status?.code === 'onsale',
+    
+    // === Links ===
+    provider_url: event.url || null,
+    
+    // === Date/Time ===
+    event_date: event.dates?.start?.localDate || null,
+    event_time: event.dates?.start?.localTime || null,
+    
+    // === Sales Period ===
+    sales_start: event.sales?.public?.startDateTime || null,
+    sales_end: event.sales?.public?.endDateTime || null,
+  };
+}
+
+// *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
 
@@ -74,233 +282,110 @@ app.use(
 // <!-- Section 4 : API Routes -->
 // *****************************************************
 
-// API Routes
-// These endpoints return JSON data for frontend use
-
-/**
- * GET /events
- * Search/browse events from Ticketmaster
- * Query params: keyword (optional), city (optional), page (optional), size (optional)
- * Returns: JSON array of events with data_source field
- */
-app.get('/events', async (req, res) => {
-  try {
-    const { keyword, city, page, size } = req.query;
-    
-    const params = {
-      apikey: process.env.API_KEY,
-      size: size || 20, // Defaults to 20 results
-      page: page || 0,   // Defaults to first page
-    };
-    
-    // Add optional search parameters if provided
-    if (keyword) params.keyword = keyword;
-    if (city) params.city = city;
-    
-    const response = await axios({
-      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-      method: 'GET',
-      headers: {
-        'Accept-Encoding': 'application/json',
-      },
-      params: params,
-    });
-    
-    // Transform the Ticketmaster data to our standardized format
-    // TODO: Expand
-    const events = response.data._embedded?.events.map(event => {
-      return {
-        id: event.id,
-        name: event.name,
-        url: event.url,
-        data_source: 'ticketmaster', // Identifies the API source
-      };
-    }) || [];
-    
-    res.status(200).json({
-      success: true,
-      data_source: 'ticketmaster',
-      events: events,
-    });
-  } catch (error) {
-    console.error('Error fetching events:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching events from provider',
-      error: error.message,
-    });
-  }
-});
-
-/**
- * GET /events/:eventId
- * Get detailed information for a specific event
- * Returns: JSON object with event details and data_source field
- */
-app.get('/events/:eventId', async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    
-    const response = await axios({
-      url: `https://app.ticketmaster.com/discovery/v2/events/${eventId}.json`,
-      method: 'GET',
-      headers: {
-        'Accept-Encoding': 'application/json',
-      },
-      params: {
-        apikey: process.env.API_KEY,
-      },
-    });
-    
-    const event = response.data;
-    
-    // Transform to our standardized format with more detailed information
-    // TODO: Expand
-    const eventDetails = {
-      id: event.id,
-      name: event.name,
-      url: event.url,
-      data_source: 'ticketmaster', // Identifies the API source
-    };
-    
-    res.status(200).json({
-      success: true,
-      data_source: 'ticketmaster',
-      event: eventDetails,
-    });
-  } catch (error) {
-    console.error('Error fetching event details:', error.message);
-    
-    if (error.response?.status === 404) {
-      res.status(404).json({
-        success: false,
-        message: 'Event not found',
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Error fetching event details',
-        error: error.message,
-      });
-    }
-  }
-});
-
-/**
- * GET /events/:eventId/listings
- * Get ticket listings from all integrated providers for a specific event
- * Returns: JSON object with listings from multiple sources
- */
-app.get('/events/:eventId/listings', async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    
-    // Array to hold listings from multiple providers
-    const allListings = [];
-    
-    // Get Ticketmaster listings (primary source)
-    try {
-      const tmResponse = await axios({
-        url: `https://app.ticketmaster.com/discovery/v2/events/${eventId}.json`,
-        method: 'GET',
-        headers: {
-          'Accept-Encoding': 'application/json',
-        },
-        params: {
-          apikey: process.env.API_KEY,
-        },
-      });
-      
-      const event = tmResponse.data;
-      
-      // Add it in as a generic listing for now
-      // TODO: Expand
-      if (allListings.length === 0) {
-        allListings.push({
-          event_id: eventId,
-          event_name: event.name,
-          provider_url: event.url,
-          data_source: 'ticketmaster',
-        });
-      }
-    } catch (tmError) {
-      console.error('Error fetching Ticketmaster listings:', tmError.message);
-    }
-    
-    // TODO: In the future, integrate additional providers here
-    // Each API provider would add their listings to the allListings array
-    // with their own data_source identifier
-    
-    res.status(200).json({
-      success: true,
-      event_id: eventId,
-      listing_count: allListings.length,
-      providers: [...new Set(allListings.map(l => l.provider))], // List all unique providers
-      listings: allListings,
-    });
-  } catch (error) {
-    console.error('Error fetching listings:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching ticket listings',
-      error: error.message,
-    });
-  }
-});
-
-// Existing page routes below
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  res.render('pages/login');
 });
 
+
+//Register Route
 app.get('/register', (req, res) => {
   res.render('pages/register');
 });
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
-  try {
-    await db.none('INSERT INTO users(username, password) VALUES($1, $2)', [
-      req.body.username,
-      hash,
-    ]);
+  let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
+  try 
+  {
+    await db.any(query, [req.body.email, hash]);
     res.redirect('/login');
-  } catch (err) {
-    console.error(err);
-    res.render('pages/register', { message: 'Registration failed.', error: true });
+  }
+  catch(err)
+  {
+    res.status(400).json({message: err.message});
+    res.redirect('/register');
   }
 });
 
+//Login Route
 app.get('/login', (req, res) => {
   res.render('pages/login');
 });
 
 app.post('/login', async (req, res) => {
-  try {
-    const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [
-      req.body.username,
-    ]);
-    if (!user) return res.redirect('/register');
-
-    const match = await bcrypt.compare(req.body.password, user.password);
-    if (!match)
-      return res.render('pages/login', { message: 'Incorrect username or password.', error: true });
-
-    req.session.user = user;
-    req.session.save();
-    res.redirect('/discover');
-  } catch (err) {
-    console.error(err);
-    res.render('pages/login', { message: 'Login failed.', error: true });
+  let query = `SELECT * FROM users WHERE email = $1;`;
+  let user = await db.oneOrNone(query, [req.body.username]);
+  if (!user) {
+    res.redirect('pages/register', {error: "User not found"});
+  }
+  else
+  {
+    const match = await bcrypt.compare(req.body.password, user.pass);
+    if (match) {
+      req.session.user = user;
+      req.session.save(() => {
+        res.redirect('pages/search');
+      });
+    }
+    else {
+      res.render('pages/login', {error: "Invalid password"});
+    }
   }
 });
 
+
+app.get('/search', async (req, res) => {
+  const searchTerm = req.query.searchTerm || '';
+  try
+  {
+    const results = await axios({
+        url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+        method: 'GET',
+        params: {
+          apikey: process.env.API_KEY,
+          keyword: searchTerm,
+          size: 30,
+        }
+      });
+    if(!results.data._embedded || !results.data._embedded.events)
+    {
+      return res.render('pages/search', { results: [], message: 'No events found', isSearchPage: true });
+    }
+    else
+    {
+      res.render('pages/search', { results: results.data._embedded.events, isSearchPage: true });
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    res.render('pages/search', { results: [], message: 'Error loading events', error: true });
+  }
+});
+
+//profile route
+app.get('/profile', (req, res) => {
+  res.render('pages/profile', { isProfilePage: true });
+});
+
+
+//comparisons route
+app.get('/comparisons', (req, res) => {
+  res.render('pages/comparisons', { isComparisonsPage: true });
+});
+
+
+
+// Authentication Middleware.
 const auth = (req, res, next) => {
-  if (!req.session.user) 
+  if (!req.session.user)
     return res.redirect('/login');
   next();
 };
 app.use(auth);
+
+
+
 
 app.get('/discover', async (req, res) => {
   try {
@@ -326,9 +411,15 @@ app.get('/logout', (req, res) => {
   });
 });
 
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
+
+
+
 // *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
+module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');
