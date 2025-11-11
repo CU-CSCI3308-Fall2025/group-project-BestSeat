@@ -1,14 +1,17 @@
 <header>
-  <nav class="navbar navbar-expand-lg navbar-light border-bottom fixed-top" style="background-color: #e6e7ea; z-index: 1030;">
+  <nav class="navbar navbar-expand-lg navbar-light border-bottom fixed-top"
+    style="background-color: #e6e7ea; z-index: 1030;">
     <div class="container">
       <a class="navbar-brand" href="/search">
         <i class="fas fa-home"></i> BestSeat
       </a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse"
-        aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+        aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation"
+        onclick="window.location.href='/search';">
         <span class="navbar-toggler-icon"></span>
       </button>
+
       <div class="collapse navbar-collapse" id="navbar-collapse">
         <form class="d-flex mx-auto w-50" action="/search" method="GET">
           <div class="input-group">
@@ -24,10 +27,10 @@
           <li class="nav-item">
             <a class="nav-link d-flex align-items-center" href="/profile">
               {{#if user.profilePicture}}
-                <img src="{{user.profilePicture}}" alt="{{user.username}}'s Profile Picture" 
-                    class="rounded-circle me-2" style="width:24px; height:24px; object-fit:cover; border:1px solid #ccc;">
+              <img src="{{user.profilePicture}}" alt="{{user.username}}'s Profile Picture" class="rounded-circle me-2"
+                style="width:24px; height:24px; object-fit:cover; border:1px solid #ccc;">
               {{else}}
-                <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
+              <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
               {{/if}}
               Profile
             </a>
