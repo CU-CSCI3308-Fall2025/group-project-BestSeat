@@ -1,38 +1,106 @@
 {{> navbar}}
 {{> message}}
+
 <div class="container mt-4">
   <h2 class="mb-4 text-center">Discover Events</h2>
 
-  {{#if results.length}}
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-      {{#each results}}
-        <div class="col">
-          <div class="card h-100 shadow-sm">
-            <img
-              src="{{#if images.[0].url}}{{images.[0].url}}{{else}}/images/default_event.jpg{{/if}}"
-              class="card-img-top"
-              alt="{{name}}"
-            />
-            <div class="card-body">
-              <h5 class="card-title">{{name}}</h5>
+  <div class="row">
+    <div class="col-md-3 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Filters</h5>
 
-              {{#if dates.start.localDate}}
-                <p class="card-text">
-                  <strong>Date:</strong> {{dates.start.localDate}}
-                  {{#if dates.start.localTime}} at {{dates.start.localTime}}{{/if}}
-                </p>
-              {{/if}}
+          <form method="GET" action="/search">
+            <div class="mb-3">
+              <label class="form-label">Website Source</label><br>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="source" value="Ticketmaster" id="ticketmaster">
+                <label class="form-check-label" for="ticketmaster">Ticketmaster</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="source" value="StubHub" id="stubhub">
+                <label class="form-check-label" for="stubhub">StubHub</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="source" value="viagogo" id="viagogo">
+                <label class="form-check-label" for="viagogo">Viagogo</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="source" value="SeatGeek" id="seatgeek">
+                <label class="form-check-label" for="seatgeek">SeatGeek</label>
+              </div>
             </div>
-            <div class="card-footer text-center">
-              <a href="{{url}}" target="_blank" class="btn btn-primary">Book Now</a>
+
+            <div class="mb-3">
+              <label for="priceRange" class="form-label">Price Range</label>
+              <input type="range" class="form-range" min="0" max="1000" step="10" id="priceRange" name="priceRange">
+              <div class="d-flex justify-content-between">
+                <small>$0</small>
+                <small>$1000+</small>
+              </div>
             </div>
-          </div>
+
+            <div class="mb-3">
+              <label for="genre" class="form-label">Genre</label>
+              <select class="form-select" id="genre" name="genre">
+                <option value="">All Genres</option>
+                <option value="Pop">Pop</option>
+                <option value="Rock">Rock</option>
+                <option value="Hip-Hop">Rap</option>
+                <option value="Pop">EDM</option>
+                <option value="Classical">Classical</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="date" class="form-label">Date</label>
+              <input type="date" class="form-control" id="date" name="date">
+            </div>
+
+            <div class="mb-3">
+              <label for="location" class="form-label">Location</label>
+              <input type="text" class="form-control" id="location" name="location" placeholder="City, State">
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Apply Filters</button>
+          </form>
         </div>
-      {{/each}}
+      </div>
     </div>
-  {{else}}
-    <div class="alert alert-warning text-center">
-      No events found. Try again later.
+
+    <div class="col-md-9">
+      {{#if results.length}}
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+          {{#each results}}
+            <div class="col">
+              <div class="card h-100 shadow-sm">
+                <img
+                  src="{{#if images.[0].url}}{{images.[0].url}}{{else}}/images/default_event.jpg{{/if}}"
+                  class="card-img-top"
+                  alt="{{name}}"
+                />
+                <div class="card-body">
+                  <h5 class="card-title">{{name}}</h5>
+
+                  {{#if dates.start.localDate}}
+                    <p class="card-text">
+                      <strong>Date:</strong> {{dates.start.localDate}}
+                      {{#if dates.start.localTime}} at {{dates.start.localTime}}{{/if}}
+                    </p>
+                  {{/if}}
+                </div>
+                <div class="card-footer text-center">
+                  <a href="{{url}}" target="_blank" class="btn btn-primary">Book Now</a>
+                </div>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      {{else}}
+        <div class="alert alert-warning text-center">
+          No events found. Try again later.
+        </div>
+      {{/if}}
     </div>
-  {{/if}}
+  </div>
 </div>
