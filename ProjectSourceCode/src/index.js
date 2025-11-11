@@ -19,15 +19,12 @@ const axios = require('axios'); // To make HTTP requests from our server. We'll 
 
 /**
  * Normalizes event data from different API providers into a standard format
- * @param {Object} eventData - Raw event data from API provider
- * @param {String} source - The API source ('ticketmaster', 'stubhub', etc.)
- * @returns {Object} Normalized event object
  */
 function normalizeEventData(eventData, source) {
   if (source === 'ticketmaster') {
     return normalizeTicketmasterEvent(eventData);
   }
-  // Future providers can be added here
+  // TODO: add more providers here
   // else if (source === 'stubhub') { return normalizeStubhubEvent(eventData); }
   
   // Default fallback
@@ -40,8 +37,6 @@ function normalizeEventData(eventData, source) {
 
 /**
  * Normalizes Ticketmaster event data to our standard format
- * @param {Object} event - Raw Ticketmaster event object
- * @returns {Object} Normalized event object
  */
 function normalizeTicketmasterEvent(event) {
   // Extract classification data
@@ -60,21 +55,21 @@ function normalizeTicketmasterEvent(event) {
   const promoter = event.promoter || event.promoters?.[0] || {};
   
   return {
-    // === Core Identifiers ===
+    // Core Identifiers
     id: event.id,
     data_source: 'ticketmaster',
     
-    // === Basic Information ===
+    // Basic Information
     name: event.name || 'Untitled Event',
     description: event.info || event.pleaseNote || null,
     type: event.type || 'event',
     
-    // === Classification ===
+    // Classification
     category: primaryClassification.segment?.name || null,
     genre: primaryClassification.genre?.name || null,
     subGenre: primaryClassification.subGenre?.name || null,
     
-    // === URLs and Media ===
+    // URLs and Media
     url: event.url || null,
     images: event.images?.map(img => ({
       url: img.url,
@@ -84,7 +79,7 @@ function normalizeTicketmasterEvent(event) {
       fallback: img.fallback || false,
     })) || [],
     
-    // === Date and Time ===
+    // Date and Time
     date: {
       start: dates.localDate || null,
       time: dates.localTime || null,
@@ -95,7 +90,7 @@ function normalizeTicketmasterEvent(event) {
       noSpecificTime: dates.noSpecificTime || false,
     },
     
-    // === Venue Information ===
+    // Venue Information
     venue: {
       id: venue.id || null,
       name: venue.name || null,
@@ -114,7 +109,7 @@ function normalizeTicketmasterEvent(event) {
       url: venue.url || null,
     },
     
-    // === Pricing ===
+    // Pricing
     pricing: {
       currency: priceRanges.currency || 'USD',
       min: priceRanges.min || null,
@@ -122,7 +117,7 @@ function normalizeTicketmasterEvent(event) {
       type: priceRanges.type || null,
     },
     
-    // === Sales Information ===
+    // Sales Information
     sales: {
       public: {
         startDateTime: event.sales?.public?.startDateTime || null,
@@ -135,10 +130,10 @@ function normalizeTicketmasterEvent(event) {
       })) || [],
     },
     
-    // === Status ===
+    // Status
     status: event.dates?.status?.code || 'unknown',
     
-    // === Additional Information ===
+    // Additional Information
     accessibility: event.accessibility || null,
     ageRestrictions: event.ageRestrictions?.legalAgeEnforced || null,
     seatmap: event.seatmap?.staticUrl || null,
@@ -147,7 +142,7 @@ function normalizeTicketmasterEvent(event) {
       name: promoter.name || null,
     },
     
-    // === Products (Attractions/Performers) ===
+    // Products (Attractions/Performers)
     attractions: event._embedded?.attractions?.map(attraction => ({
       id: attraction.id,
       name: attraction.name,
@@ -160,16 +155,12 @@ function normalizeTicketmasterEvent(event) {
 
 /**
  * Normalizes ticket listing data from different providers
- * @param {Object} listingData - Raw listing data from provider
- * @param {String} source - The provider source
- * @param {String} eventId - The event ID this listing is for
- * @returns {Object} Normalized listing object
  */
 function normalizeListingData(listingData, source, eventId) {
   if (source === 'ticketmaster') {
     return normalizeTicketmasterListing(listingData, eventId);
   }
-  // Future providers can be added here
+  // Future providers to be added here
   
   return {
     event_id: eventId,
@@ -180,9 +171,6 @@ function normalizeListingData(listingData, source, eventId) {
 
 /**
  * Normalizes Ticketmaster listing data
- * @param {Object} event - Ticketmaster event object
- * @param {String} eventId - Event ID
- * @returns {Object} Normalized listing object
  */
 function normalizeTicketmasterListing(event, eventId) {
   const priceRanges = event.priceRanges?.[0] || {};
@@ -294,16 +282,16 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
-  let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
+  const query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
   try 
   {
-    await db.any(query, [req.body.email, hash]);
+    await db.none(query, [req.body.email, hash]);
     res.redirect('/login');
   }
   catch(err)
   {
-    res.status(400).json({message: err.message});
-    res.redirect('/register');
+    console.error(err);
+    res.status(400).render('pages/register', { error: 'Registration failed. Email may already exist.' });
   }
 });
 
@@ -314,9 +302,9 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
-  let user = await db.oneOrNone(query, [req.body.username]);
+  let user = await db.oneOrNone(query, [req.body.email]);
   if (!user) {
-    res.redirect('pages/register', {error: "User not found"});
+    return res.render('pages/login', { error: "User not found" });
   }
   else
   {
@@ -324,7 +312,7 @@ app.post('/login', async (req, res) => {
     if (match) {
       req.session.user = user;
       req.session.save(() => {
-        res.redirect('pages/search');
+        res.redirect('/search');
       });
     }
     else {
@@ -333,8 +321,14 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Authentication Middleware.
+const auth = (req, res, next) => {
+  if (!req.session.user)
+    return res.redirect('/login');
+  next();
+};
 
-app.get('/search', async (req, res) => {
+app.get('/search', auth, async (req, res) => {
   const searchTerm = req.query.searchTerm || '';
   try
   {
@@ -353,7 +347,11 @@ app.get('/search', async (req, res) => {
     }
     else
     {
-      res.render('pages/search', { results: results.data._embedded.events, isSearchPage: true });
+      // Normalize all events from Ticketmaster to our standard format
+      const normalizedEvents = results.data._embedded.events.map(event => 
+        normalizeEventData(event, 'ticketmaster')
+      );
+      res.render('pages/search', { results: normalizedEvents, isSearchPage: true });
     }
   }
   catch(error)
@@ -364,30 +362,16 @@ app.get('/search', async (req, res) => {
 });
 
 //profile route
-app.get('/profile', (req, res) => {
+app.get('/profile', auth, (req, res) => {
   res.render('pages/profile', { isProfilePage: true });
 });
 
-
 //comparisons route
-app.get('/comparisons', (req, res) => {
+app.get('/comparisons', auth, (req, res) => {
   res.render('pages/comparisons', { isComparisonsPage: true });
 });
 
-
-
-// Authentication Middleware.
-const auth = (req, res, next) => {
-  if (!req.session.user)
-    return res.redirect('/login');
-  next();
-};
-app.use(auth);
-
-
-
-
-app.get('/discover', async (req, res) => {
+app.get('/discover', auth, async (req, res) => {
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
@@ -398,7 +382,11 @@ app.get('/discover', async (req, res) => {
         size: 10,
       },
     });
-    res.render('pages/discover', { results: results.data._embedded.events });
+    // Normalize all events from Ticketmaster to our standard format
+    const normalizedEvents = results.data._embedded.events.map(event => 
+      normalizeEventData(event, 'ticketmaster')
+    );
+    res.render('pages/discover', { results: normalizedEvents });
   } catch (error) {
     console.error(error);
     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
@@ -407,15 +395,13 @@ app.get('/discover', async (req, res) => {
 
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.render('pages/home', { message: 'Logged out Successfully' });
+    res.redirect('/login');
   });
 });
 
 app.get('/welcome', (req, res) => {
   res.json({status: 'success', message: 'Welcome!'});
 });
-
-
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
