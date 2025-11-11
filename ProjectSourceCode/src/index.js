@@ -105,25 +105,23 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
-  let user = await db.oneOrNone(query, [req.body.email]);
-  if(!user)
-    {
-        res.redirect('pages/register', {error: "User not found"});
+  let user = await db.oneOrNone(query, [req.body.username]);
+  if (!user) {
+    res.redirect('pages/register', {error: "User not found"});
+  }
+  else
+  {
+    const match = await bcrypt.compare(req.body.password, user.pass);
+    if (match) {
+      req.session.user = user;
+      req.session.save(() => {
+        res.redirect('pages/search');
+      });
     }
-    else
-    {
-      const match = await bcrypt.compare(req.body.password, user.pass);
-      if(match)
-      {
-          res.redirect('pages/search');
-          req.session.user = user;
-          req.session.save();
-      }
-      else
-      {
-          res.render('pages/login', {error: "Invalid password"});
-      }
+    else {
+      res.render('pages/login', {error: "Invalid password"});
     }
+  }
 });
 
 
@@ -180,23 +178,23 @@ app.use(auth);
 
 
 
-// app.get('/discover', async (req, res) => {
-//   try {
-//     const results = await axios({
-//       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-//       method: 'GET',
-//       params: {
-//         apikey: process.env.API_KEY,
-//         keyword: 'edm',
-//         size: 10,
-//       },
-//     });
-//     res.render('pages/discover', { results: results.data._embedded.events });
-//   } catch (error) {
-//     console.error(error);
-//     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
-//   }
-// });
+app.get('/discover', async (req, res) => {
+  try {
+    const results = await axios({
+      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+      method: 'GET',
+      params: {
+        apikey: process.env.API_KEY,
+        keyword: 'edm',
+        size: 10,
+      },
+    });
+    res.render('pages/discover', { results: results.data._embedded.events });
+  } catch (error) {
+    console.error(error);
+    res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
+  }
+});
 
 
 
