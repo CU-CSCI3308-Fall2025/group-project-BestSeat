@@ -34,8 +34,14 @@
 
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="/profile">
-              <i class="fas fa-user-circle"></i> Profile
+            <a class="nav-link d-flex align-items-center" href="/profile">
+              {{#if user.profilePicture}}
+                <img src="{{user.profilePicture}}" alt="{{user.username}}'s Profile Picture" 
+                    class="rounded-circle me-2" style="width:24px; height:24px; object-fit:cover; border:1px solid #ccc;">
+              {{else}}
+                <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
+              {{/if}}
+              Profile
             </a>
           </li>
         </ul>
