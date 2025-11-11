@@ -1,1 +1,57 @@
 {{> navbar}}
+{{> message}}
+
+<div class="container mt-4">
+    <div>
+        <h2>{{eventName}}{{#unless eventName}}Event{{/unless}}</h2>
+        <p>
+            {{#if eventDate}}<strong>Date:</strong> {{eventDate}} | {{else}}<strong>Date:</strong> Date | {{/if}}
+            {{#if eventLocation}}<strong>Location:</strong> {{eventLocation}}{{else}}<strong>Location:</strong> Location {{/if}}
+        </p>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ticketmaster</h5>
+                    <p><strong>Price:</strong> ${{ticketmaster.price}}</p>
+                    <p><strong>Seat Location:</strong> {{ticketmaster.seatLocation}}</p>
+                    <p><strong>Link:</strong> <a href="{{ticketmaster.link}}" target="_blank">{{ticketmaster.link}}</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">StubHub</h5>
+                    <p><strong>Price:</strong> ${{stubhub.price}}</p>
+                    <p><strong>Seat Location:</strong> {{stubhub.seatLocation}}</p>
+                    <p><strong>Link:</strong> <a href="{{stubhub.link}}" target="_blank">{{stubhub.link}}</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Viagogo</h5>
+                    <p><strong>Price:</strong> ${{viagogo.price}}</p>
+                    <p><strong>Seat Location:</strong> {{viagogo.seatLocation}}</p>
+                    <p><strong>Link:</strong> <a href="{{viagogo.link}}" target="_blank">{{viagogo.link}}</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">SeatGeek</h5>
+                    <p><strong>Price:</strong> ${{seatgeek.price}}</p>
+                    <p><strong>Seat Location:</strong> {{seatgeek.seatLocation}}</p>
+                    <p><strong>Link:</strong> <a href="{{seatgeek.link}}" target="_blank">{{seatgeek.link}}</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
