@@ -7,3 +7,6 @@ Database and API Endpoints have also had some progress
 
 11/11:
 Built search route with ticketmaster API.
+Front end is built for both comparisons and profile pages using handlebars
+Users can search for events through the navbar by entering thier own keyword 
+Users can see thier profile page when clicking on the navbar icon
