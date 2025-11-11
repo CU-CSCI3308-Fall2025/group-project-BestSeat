@@ -4,3 +4,6 @@ Login and Register both have email formatting requirements
 User can seamlessly go between regisrer and login pages when needed to 
 User can also naviagte seamlessly between profile and search pages when logged in
 Database and API Endpoints have also had some progress
+
+11/11:
+Built search route with ticketmaster API.
