@@ -1,0 +1,14 @@
+Minutes for meeting on Novemeber 11: 2:30 - 2:45
+
+Started with demo on Tate's screen.
+Search page works, shows results from ticketmaster.
+Comparison page up but API's route not connected.
+
+Project Board.
+Everyone works this week:
+Kyle - Made search and profile UI. This week: Work on Login UI (css).
+Eyal - Made search routes and researched API routes. This week: get API calls
+Tate - Made search page. This week: Comparison page.
+Blake - Finished ticketmaster API datastructure. Fixed bugs. This week: Comparisons page.
+
+Plans for future: finish MVP before fall break.
