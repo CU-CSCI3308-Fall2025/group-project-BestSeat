@@ -14,6 +14,202 @@ const bcrypt = require('bcryptjs'); //  To hash passwords
 const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
 
 // *****************************************************
+// <!-- Section 1.5 : API Normalization Helpers -->
+// *****************************************************
+
+/**
+ * Normalizes event data from different API providers into a standard format
+ */
+function normalizeEventData(eventData, source) {
+  if (source === 'ticketmaster') {
+    return normalizeTicketmasterEvent(eventData);
+  }
+  // TODO: add more providers here
+  // else if (source === 'stubhub') { return normalizeStubhubEvent(eventData); }
+  
+  // Default fallback
+  return {
+    id: eventData.id || null,
+    name: eventData.name || 'Untitled Event',
+    data_source: source,
+  };
+}
+
+/**
+ * Normalizes Ticketmaster event data to our standard format
+ */
+function normalizeTicketmasterEvent(event) {
+  // Extract classification data
+  const primaryClassification = event.classifications?.[0] || {};
+  
+  // Extract venue information
+  const venue = event._embedded?.venues?.[0] || {};
+  
+  // Extract date/time information
+  const dates = event.dates?.start || {};
+  
+  // Extract price information
+  const priceRanges = event.priceRanges?.[0] || {};
+  
+  // Extract promoter information
+  const promoter = event.promoter || event.promoters?.[0] || {};
+  
+  return {
+    // Core Identifiers
+    id: event.id,
+    data_source: 'ticketmaster',
+    
+    // Basic Information
+    name: event.name || 'Untitled Event',
+    description: event.info || event.pleaseNote || null,
+    type: event.type || 'event',
+    
+    // Classification
+    category: primaryClassification.segment?.name || null,
+    genre: primaryClassification.genre?.name || null,
+    subGenre: primaryClassification.subGenre?.name || null,
+    
+    // URLs and Media
+    url: event.url || null,
+    images: event.images?.map(img => ({
+      url: img.url,
+      width: img.width,
+      height: img.height,
+      ratio: img.ratio,
+      fallback: img.fallback || false,
+    })) || [],
+    
+    // Date and Time
+    date: {
+      start: dates.localDate || null,
+      time: dates.localTime || null,
+      datetime: dates.dateTime || null,
+      timezone: dates.timezone || null,
+      tba: dates.dateTBA || false,
+      tbd: dates.dateTBD || false,
+      noSpecificTime: dates.noSpecificTime || false,
+    },
+    
+    // Venue Information
+    venue: {
+      id: venue.id || null,
+      name: venue.name || null,
+      address: venue.address?.line1 || null,
+      city: venue.city?.name || null,
+      state: venue.state?.name || null,
+      stateCode: venue.state?.stateCode || null,
+      postalCode: venue.postalCode || null,
+      country: venue.country?.name || null,
+      countryCode: venue.country?.countryCode || null,
+      location: {
+        latitude: venue.location?.latitude || null,
+        longitude: venue.location?.longitude || null,
+      },
+      timezone: venue.timezone || null,
+      url: venue.url || null,
+    },
+    
+    // Pricing
+    pricing: {
+      currency: priceRanges.currency || 'USD',
+      min: priceRanges.min || null,
+      max: priceRanges.max || null,
+      type: priceRanges.type || null,
+    },
+    
+    // Sales Information
+    sales: {
+      public: {
+        startDateTime: event.sales?.public?.startDateTime || null,
+        endDateTime: event.sales?.public?.endDateTime || null,
+      },
+      presales: event.sales?.presales?.map(presale => ({
+        name: presale.name || null,
+        startDateTime: presale.startDateTime || null,
+        endDateTime: presale.endDateTime || null,
+      })) || [],
+    },
+    
+    // Status
+    status: event.dates?.status?.code || 'unknown',
+    
+    // Additional Information
+    accessibility: event.accessibility || null,
+    ageRestrictions: event.ageRestrictions?.legalAgeEnforced || null,
+    seatmap: event.seatmap?.staticUrl || null,
+    promoter: {
+      id: promoter.id || null,
+      name: promoter.name || null,
+    },
+    
+    // Products (Attractions/Performers)
+    attractions: event._embedded?.attractions?.map(attraction => ({
+      id: attraction.id,
+      name: attraction.name,
+      type: attraction.type || null,
+      url: attraction.url || null,
+      image: attraction.images?.[0]?.url || null,
+    })) || [],
+  };
+}
+
+/**
+ * Normalizes ticket listing data from different providers
+ */
+function normalizeListingData(listingData, source, eventId) {
+  if (source === 'ticketmaster') {
+    return normalizeTicketmasterListing(listingData, eventId);
+  }
+  // Future providers to be added here
+  
+  return {
+    event_id: eventId,
+    data_source: source,
+    provider_url: listingData.url || null,
+  };
+}
+
+/**
+ * Normalizes Ticketmaster listing data
+ */
+function normalizeTicketmasterListing(event, eventId) {
+  const priceRanges = event.priceRanges?.[0] || {};
+  
+  return {
+    // === Identifiers ===
+    event_id: eventId,
+    listing_id: event.id,
+    data_source: 'ticketmaster',
+    
+    // === Event Information ===
+    event_name: event.name,
+    venue_name: event._embedded?.venues?.[0]?.name || null,
+    
+    // === Pricing ===
+    price: {
+      currency: priceRanges.currency || 'USD',
+      min: priceRanges.min || null,
+      max: priceRanges.max || null,
+    },
+    
+    // === Availability ===
+    status: event.dates?.status?.code || 'unknown',
+    available: event.dates?.status?.code === 'onsale',
+    
+    // === Links ===
+    provider_url: event.url || null,
+    
+    // === Date/Time ===
+    event_date: event.dates?.start?.localDate || null,
+    event_time: event.dates?.start?.localTime || null,
+    
+    // === Sales Period ===
+    sales_start: event.sales?.public?.startDateTime || null,
+    sales_end: event.sales?.public?.endDateTime || null,
+  };
+}
+
+// *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
 
@@ -78,6 +274,7 @@ app.get('/', (req, res) => {
   res.render('pages/login');
 });
 
+
 //Register Route
 app.get('/register', (req, res) => {
   res.render('pages/register');
@@ -85,16 +282,16 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
-  let query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
+  const query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
   try 
   {
-    await db.any(query, [req.body.email, hash]);
+    await db.none(query, [req.body.email, hash]);
     res.redirect('/login');
   }
   catch(err)
   {
-    res.status(400).json({message: err.message});
-    res.redirect('/register');
+    console.error(err);
+    res.status(400).render('pages/register', { error: 'Registration failed. Email may already exist.' });
   }
 });
 
@@ -105,9 +302,9 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   let query = `SELECT * FROM users WHERE email = $1;`;
-  let user = await db.oneOrNone(query, [req.body.username]);
+  let user = await db.oneOrNone(query, [req.body.email]);
   if (!user) {
-    res.redirect('pages/register', {error: "User not found"});
+    return res.render('pages/login', { error: "User not found" });
   }
   else
   {
@@ -115,7 +312,7 @@ app.post('/login', async (req, res) => {
     if (match) {
       req.session.user = user;
       req.session.save(() => {
-        res.redirect('pages/search');
+        res.redirect('/search');
       });
     }
     else {
@@ -124,8 +321,14 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Authentication Middleware.
+const auth = (req, res, next) => {
+  if (!req.session.user)
+    return res.redirect('/login');
+  next();
+};
 
-app.get('/search', async (req, res) => {
+app.get('/search', auth, async (req, res) => {
   const searchTerm = req.query.searchTerm || '';
   try
   {
@@ -144,7 +347,11 @@ app.get('/search', async (req, res) => {
     }
     else
     {
-      res.render('pages/search', { results: results.data._embedded.events, isSearchPage: true });
+      // Normalize all events from Ticketmaster to our standard format
+      const normalizedEvents = results.data._embedded.events.map(event => 
+        normalizeEventData(event, 'ticketmaster')
+      );
+      res.render('pages/search', { results: normalizedEvents, isSearchPage: true });
     }
   }
   catch(error)
@@ -155,30 +362,16 @@ app.get('/search', async (req, res) => {
 });
 
 //profile route
-app.get('/profile', (req, res) => {
+app.get('/profile', auth, (req, res) => {
   res.render('pages/profile', { isProfilePage: true });
 });
 
-
 //comparisons route
-app.get('/comparisons', (req, res) => {
+app.get('/comparisons', auth, (req, res) => {
   res.render('pages/comparisons', { isComparisonsPage: true });
 });
 
-
-
-// Authentication Middleware.
-const auth = (req, res, next) => {
-  if (!req.session.user)
-    return res.redirect('/login');
-  next();
-};
-app.use(auth);
-
-
-
-
-app.get('/discover', async (req, res) => {
+app.get('/discover', auth, async (req, res) => {
   try {
     const results = await axios({
       url: 'https://app.ticketmaster.com/discovery/v2/events.json',
@@ -189,26 +382,26 @@ app.get('/discover', async (req, res) => {
         size: 10,
       },
     });
-    res.render('pages/discover', { results: results.data._embedded.events });
+    // Normalize all events from Ticketmaster to our standard format
+    const normalizedEvents = results.data._embedded.events.map(event => 
+      normalizeEventData(event, 'ticketmaster')
+    );
+    res.render('pages/discover', { results: normalizedEvents });
   } catch (error) {
     console.error(error);
     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
   }
 });
 
-
-
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.render('pages/home', { message: 'Logged out Successfully' });
+    res.redirect('/login');
   });
 });
 
 app.get('/welcome', (req, res) => {
   res.json({status: 'success', message: 'Welcome!'});
 });
-
-
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
