@@ -254,6 +254,9 @@ app.post('/login', async (req, res) => {
   {
     const match = await bcrypt.compare(req.body.password, user.pass);
     if (match) {
+      user.email = req.body.email;
+      user.displayName = req.body.email.split('@')[0];
+
       req.session.user = user;
       req.session.save(() => {
         res.redirect('/search');
@@ -262,9 +265,6 @@ app.post('/login', async (req, res) => {
     else {
       res.render('pages/login', {error: "Invalid password"});
     }
-    user.email = req.body.email;
-    user.displayName = req.body.email.split('@')[0];
-    user.password = req.body.password;
     console.log(user.email);
     console.log(user.displayName);
     console.log(user.password);
@@ -313,7 +313,10 @@ app.get('/search', auth, async (req, res) => {
 
 //profile route
 app.get('/profile', auth, (req, res) => {
-  res.render('pages/profile', { isProfilePage: true });
+  res.render('pages/profile', { 
+    isProfilePage: true,
+    user: req.session.user
+  });
 });
 
 //comparisons route
