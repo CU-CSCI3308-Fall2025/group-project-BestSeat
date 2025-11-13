@@ -280,7 +280,7 @@ app.get('/search', auth, async (req, res) => {
         url: 'https://app.ticketmaster.com/discovery/v2/events.json',
         method: 'GET',
         params: {
-          apikey: process.env.API_KEY,
+          apikey: process.env.TICKETMASTER_API_KEY,
           keyword: searchTerm,
           size: 30,
         }
@@ -311,7 +311,123 @@ app.get('/profile', auth, (req, res) => {
 });
 
 //comparisons route
-app.get('/comparisons', auth, (req, res) => {
+app.get('/comparisons', auth, async (req, res) => {
+  const eventId = req.query.eventId || '';
+  //Get event data from Ticketmaster
+  try
+  {
+    const ticketMaster = await axios({
+        url: `https://app.ticketmaster.com/discovery/v2/events/.json`,
+        method: 'GET',
+        params: {
+          apikey: process.env.TICKETMASTER_API_KEY,
+          id: eventId,
+        }
+      });
+
+    if(!ticketMaster.data._embedded || !ticketMaster.data._embedded.events)
+    {
+        return res.render('pages/comparisons', { results: [], message: 'Event not found on TicketMaster', isComparisonsPage: true });
+    }
+    else
+    {
+        // Normalize event from Ticketmaster to our standard format
+        ticketMaster = normalizeEventData(ticketMaster.data, 'ticketmaster');
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    return res.render('pages/comparisons', { results: [], message: 'Error loading event from TicketMaster', error: true });
+  }
+  
+  
+  //Using ticketmaster data to get data from SeatGeek, Viagogo, Stubhub
+  try
+  {
+    const seatGeek = await axios({
+        url: 'https://api.seatgeek.com/2/events',
+        method: 'GET',
+        params: {
+          client_id: process.env.SEATGEEK_API_KEY,
+          performers: ticketMaster.data.name,
+          datetime_utc: ticketMaster.data.dates.start.dateTime,
+        }
+      });
+    if(!seatGeek.data._embedded || !seatGeek.data._embedded.events)
+    {
+      return res.render('pages/comparisons', { results: [], message: 'Event not found on SeatGeek', isComparisonsPage: true });
+    }
+    else
+    {
+      // Normalize event from SeatGeek to our standard format
+      seatGeek = normalizeEventData(seatGeek.data, 'seatgeek'); //check with Blake regarding source
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    return res.render('pages/comparisons', { results: [], message: 'Error loading event from SeatGeek', error: true });
+  }
+  
+  try
+  {
+    const viagogo = await axios({
+        url: 'https://api.viagogo.net/catalog/mapevent',
+        method: 'POST',
+        params: {
+          api: process.env.VIAGOGO_API_KEY, // Waiting for api
+          event_name: ticketMaster.data.name,
+          local_date: ticketMaster.data.dates.start.dateTime,
+          venue_name: ticketMaster.data._embedded.venues[0].name,
+        }
+      });
+    if(!viagogo.data._embedded || !viagogo.data._embedded.events)
+    {
+      return res.render('pages/comparisons', { results: [], message: 'Event not found on Viagogo', isComparisonsPage: true });
+    }
+    else
+    {
+      // Normalize event from Viagogo to our standard format
+      viagogo = normalizeEventData(viagogo.data, 'viagogo'); //check with Blake regarding source
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    return res.render('pages/comparisons', { results: [], message: 'Error loading event from Viagogo', error: true });
+  }
+
+  try
+  {
+    const stubhub = await axios({
+        url: 'https://api.stubhub.net/catalog/mapevent',
+        method: 'POST',
+        params: {
+          api: process.env.STUBHUB_API_KEY, // Waiting for api
+          event_name: ticketMaster.data.name,
+          local_date: ticketMaster.data.dates.start.dateTime,
+          venue_name: ticketMaster.data._embedded.venues[0].name,
+        }
+      });
+    if(!stubhub.data._embedded || !stubhub.data._embedded.events)
+    {
+      return res.render('pages/comparisons', { results: [], message: 'Event not found on StubHub', isComparisonsPage: true });
+    }
+    else
+    {
+      // Normalize event from Viagogo to our standard format
+      stubhub = normalizeEventData(stubhub.data, 'stubhub'); //check with Blake regarding source
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    return res.render('pages/comparisons', { results: [], message: 'Error loading event from StubHub', error: true });
+  }
+  
+  
+
   res.render('pages/comparisons', { isComparisonsPage: true });
 });
 
