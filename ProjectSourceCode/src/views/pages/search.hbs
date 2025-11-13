@@ -49,7 +49,7 @@
             </div>
 
             <div class="mb-3">
-              <label for="priceRange" class="form-label">Price Range</label>
+              <label for="priceRange" class="form-label">Maximum Price</label>
               <input type="range" class="form-range" min="0" max="1000" step="10" id="priceRange" name="priceRange">
               <div class="d-flex justify-content-between">
                 <small>$0</small>
@@ -99,10 +99,10 @@
                 <div class="card-body">
                   <h5 class="card-title">{{name}}</h5>
 
-                  {{#if dates.start.localDate}}
+                  {{#if date.start}}
                     <p class="card-text">
-                      <strong>Date:</strong> {{dates.start.localDate}}
-                      {{#if dates.start.localTime}} at {{dates.start.localTime}}{{/if}}
+                      <strong>Date:</strong> {{date.start}}
+                      {{#if date.time}} at {{date.time}}{{/if}}
                     </p>
                   {{/if}}
                 </div>
