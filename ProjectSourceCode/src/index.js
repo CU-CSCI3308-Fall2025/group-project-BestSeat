@@ -262,6 +262,12 @@ app.post('/login', async (req, res) => {
     else {
       res.render('pages/login', {error: "Invalid password"});
     }
+    user.email = req.body.email;
+    user.displayName = req.body.email.split('@')[0];
+    user.password = req.body.password;
+    console.log(user.email);
+    console.log(user.displayName);
+    console.log(user.password);
   }
 });
 
