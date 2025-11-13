@@ -6,7 +6,7 @@
 
     <div class="d-flex flex-column flex-md-row align-items-center mb-4">
       <img
-        src="{{#if user.profilePicture}}{{user.profilePicture}}{{else}}/images/default_profile.png{{/if}}"
+        src="./src/resources/img/default_profile.png"
         alt="{{user.displayName}}'s Profile Picture"
         class="rounded mb-3 mb-md-0 me-md-4"
         style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;"
@@ -23,7 +23,7 @@
       <strong>Email:</strong> {{user.email}}
     </div>
 
-    <form class="d-flex align-items-center mb-5" method="POST" action="/profile/update-name">
+    <form id="displayNameForm" class="d-flex align-items-center mb-5">
       <label for="displayName" class="form-label me-2 fw-semibold mb-0">Display Name</label>
       <input type="text" id="displayName" name="displayName" class="form-control me-2"
              value="{{user.displayName}}" style="max-width:300px;">
@@ -120,6 +120,27 @@
         .catch(err => console.error(err));
     }
   }
+
+  document.getElementById("displayNameForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const newName = document.getElementById("displayName").value;
+
+    fetch("/profile/update-name", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ displayName: newName })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        //alert("Display name updated!");
+      }
+    })
+    .catch(err => console.error(err));
+  });
 </script>
 
 {{> message}}

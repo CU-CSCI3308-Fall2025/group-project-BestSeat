@@ -265,9 +265,9 @@ app.post('/login', async (req, res) => {
     else {
       res.render('pages/login', {error: "Invalid password"});
     }
-    console.log(user.email);
-    console.log(user.displayName);
-    console.log(user.password);
+    //console.log(user.email);
+    //console.log(user.displayName);
+    //console.log(user.password);
   }
 });
 
@@ -318,6 +318,15 @@ app.get('/profile', auth, (req, res) => {
     user: req.session.user
   });
 });
+
+app.post('/profile/update-name', auth, (req, res) => {
+  const { displayName } = req.body;
+
+  req.session.user.displayName = displayName;
+
+  res.json({ success: true, displayName });
+});
+
 
 //comparisons route
 app.get('/comparisons', auth, (req, res) => {
