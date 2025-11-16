@@ -321,26 +321,28 @@ app.get('/profile', auth, (req, res) => {
 //comparisons route
 app.get('/comparisons', auth, async (req, res) => {
   const eventId = req.query.eventId || '';
+  let ticketMasterResponse = null;
+  let ticketMasterEvent = null;
   //Get event data from Ticketmaster
   try
   {
-    const ticketMaster = await axios({
-        url: `https://app.ticketmaster.com/discovery/v2/events/.json`,
+    ticketMasterResponse = await axios({
+        url: `https://app.ticketmaster.com/discovery/v2/events/${eventId}.json`,
         method: 'GET',
         params: {
           apikey: process.env.TICKETMASTER_API_KEY,
-          id: eventId,
         }
       });
 
-    if(!ticketMaster.data._embedded || !ticketMaster.data._embedded.events)
+    if(!ticketMasterResponse.data)
     {
         return res.render('pages/comparisons', { results: [], message: 'Event not found on TicketMaster', isComparisonsPage: true });
     }
     else
     {
         // Normalize event from Ticketmaster to our standard format
-        ticketMaster = normalizeEventData(ticketMaster.data, 'ticketmaster');
+        ticketMasterEvent = normalizeEventData(ticketMasterResponse.data, 'ticketmaster');
+        console.log('TicketMaster Event:', ticketMasterEvent);
     }
   }
   catch(error)
@@ -354,9 +356,7 @@ app.get('/comparisons', auth, async (req, res) => {
     method: 'GET',
     url: 'https://real-time-events-search.p.rapidapi.com/search-events',
     params: {
-      query: ticketMaster.data.name,
-      date: ticketMaster.data.dates.start.dateTime,
-      is_virtual: 'false',
+      query: ticketMasterEvent.name,
       start: '0'
     },
     headers: {
@@ -367,26 +367,29 @@ app.get('/comparisons', auth, async (req, res) => {
 
   try
   {
-    const Events = await axios.request(query);
-    if(!Events.data.events || Events.data.events.length === 0)
+    const rteResponse = await axios.request(query);
+    console.log('Real-Time Events Response:', rteResponse.data);
+    if(!rteResponse.data || rteResponse.data.length == 0)
     {
-      return res.render('pages/comparisons', { results: [], message: 'No other event sellers found', isComparisonsPage: true });
+      return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'No other sellers found', isComparisonsPage: true });
     }
-    // Normalize all events from Real-Time Events API to our standard format
-    Events = Events.data.events.map(event => normalizeEventData(event, Events.publisher));
+
+    // Extrac the sellers from the response
+    const event_sellers = rteResponse.data.data.ticket_links;
+
+    // const normalizedEvents = rteResponse.data.data.map(event => {
+    //   let source_index = 0;
+    //   return normalizeEventData(event, sourceNames[source_index] || 'unknown');
+    // });
+
+    res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: event_sellers, message: 'Loaded successfully', isComparisonsPage: true })
   }
   catch(error)
   {
     console.error(error);
-    return res.render('pages/comparisons', { results: [], message: 'Error loading event', error: true });
+    return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'Error loading event', error: true });
   }
 
-  //SAve each event by the 4 websites we used
-  stubHub = searchEventBySource(Events, 'stubhub');
-  viagogo = searchEventBySource(Events, 'viagogo');
-  seatGeek = searchEventBySource(Events, 'seatgeek');
-  
-  res.render('pages/comparisons', { ticketMaster, stubhub, viagogo, seatGeek, isComparisonsPage: true });
 });
 
 app.get('/discover', auth, async (req, res) => {
