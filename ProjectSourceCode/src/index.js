@@ -226,10 +226,11 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
+  const email = req.body.email.toLowerCase();
   const query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
   try 
   {
-    await db.none(query, [req.body.email, hash]);
+    await db.none(query, [email, hash]);
     res.redirect('/login');
   }
   catch(err)
@@ -245,8 +246,9 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
+  const email = req.body.email.toLowerCase();
   let query = `SELECT * FROM users WHERE email = $1;`;
-  let user = await db.oneOrNone(query, [req.body.email]);
+  let user = await db.oneOrNone(query, [email]);
   if (!user) {
     return res.render('pages/login', { error: "User not found" });
   }
@@ -254,8 +256,8 @@ app.post('/login', async (req, res) => {
   {
     const match = await bcrypt.compare(req.body.password, user.pass);
     if (match) {
-      user.email = req.body.email;
-      user.displayName = req.body.email.split('@')[0];
+      user.email = email;
+      user.displayName = email.split('@')[0];
 
       req.session.user = user;
       req.session.save(() => {

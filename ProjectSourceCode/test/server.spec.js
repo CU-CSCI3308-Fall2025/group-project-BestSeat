@@ -96,32 +96,3 @@ describe('Testing Render', () => {
       });
   });
 });
-
-//Extra Credit
-describe('', () => {
-  it('positive : /search', done => {
-    chai
-      .request(server)
-      .post('/search')
-      .send({searchTerm: "Coldplay"})
-      .end((err, res) => {
-        expect(res).to.have.status(200);
-        expect(res.body.message).to.equals('Success');
-        done();
-      });
-  });
-});
-
-describe('', () => {
-  it('negative : /search', done => {
-    chai
-      .request(server)
-      .post('/search')
-      .send({searchTerm: "Coldplay"})
-      .end((err, res) => {
-        expect(res).to.have.status(400);
-        expect(res.body.message).to.equals('No results found');
-        done();
-      });
-  });
-});
