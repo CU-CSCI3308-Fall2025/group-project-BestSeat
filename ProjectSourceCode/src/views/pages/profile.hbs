@@ -5,12 +5,9 @@
     <h3 class="mb-4 fw-bold">Profile Settings</h3>
 
     <div class="d-flex flex-column flex-md-row align-items-center mb-4">
-      <img
-        src="{{#if user.profilePicture}}{{user.profilePicture}}{{else}}/images/default_profile.png{{/if}}"
-        alt="{{user.displayName}}'s Profile Picture"
-        class="rounded mb-3 mb-md-0 me-md-4"
-        style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;"
-      />
+      <img src="{{#if user.profilePicture}}{{user.profilePicture}}{{else}}/images/default_profile.png{{/if}}"
+        alt="{{user.displayName}}'s Profile Picture" class="rounded mb-3 mb-md-0 me-md-4"
+        style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;" />
       <form action="/profile/upload-picture" method="POST" enctype="multipart/form-data">
         <div class="d-flex flex-column">
           <input type="file" name="profilePicture" accept="image/*" class="form-control mb-2" style="max-width:250px;">
@@ -25,35 +22,34 @@
 
     <form class="d-flex align-items-center mb-5" method="POST" action="/profile/update-name">
       <label for="displayName" class="form-label me-2 fw-semibold mb-0">Display Name</label>
-      <input type="text" id="displayName" name="displayName" class="form-control me-2"
-             value="{{user.displayName}}" style="max-width:300px;">
+      <input type="text" id="displayName" name="displayName" class="form-control me-2" value="{{user.displayName}}"
+        style="max-width:300px;">
       <button type="submit" class="btn btn-success">Save Display Name</button>
     </form>
 
     <h5 class="fw-bold mb-3">Followed Artists</h5>
     {{#if user.following}}
-      <div class="row">
-        {{#each user.following}}
-          <div class="col-6 col-md-3 mb-3">
-            <div class="card h-100 position-relative shadow-sm">
-              <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
-                      onclick="removeArtist('{{this.id}}')">
-                <i class="fas fa-times"></i>
-              </button>
-              <img src="{{#if this.image}}{{this.image}}{{else}}/images/placeholder.png{{/if}}"
-                   alt="{{this.name}}" class="card-img-top"
-                   style="height:120px; object-fit:cover;">
-              <div class="card-body text-center">
-                <h6 class="card-title mb-0">{{this.name}}</h6>
-                {{#if this.type}}<p class="mb-1 text-muted small">{{this.type}}</p>{{/if}}
-                <a href="{{this.link}}" class="btn btn-outline-primary btn-sm mt-2">View on Ticketmaster</a>
-              </div>
-            </div>
+    <div class="row">
+      {{#each user.following}}
+      <div class="col-6 col-md-3 mb-3">
+        <div class="card h-100 position-relative shadow-sm">
+          <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+            onclick="removeArtist('{{this.id}}')">
+            <i class="fas fa-times"></i>
+          </button>
+          <img src="{{#if this.image}}{{this.image}}{{else}}/images/placeholder.png{{/if}}" alt="{{this.name}}"
+            class="card-img-top" style="height:120px; object-fit:cover;">
+          <div class="card-body text-center">
+            <h6 class="card-title mb-0">{{this.name}}</h6>
+            {{#if this.type}}<p class="mb-1 text-muted small">{{this.type}}</p>{{/if}}
+            <a href="{{this.link}}" class="btn btn-outline-primary btn-sm mt-2">View on Ticketmaster</a>
           </div>
-        {{/each}}
+        </div>
       </div>
+      {{/each}}
+    </div>
     {{else}}
-      <p class="text-muted">You are not following any artists.</p>
+    <p class="text-muted">You are not following any artists.</p>
     {{/if}}
 
     <div class="card mt-5 mb-4">
