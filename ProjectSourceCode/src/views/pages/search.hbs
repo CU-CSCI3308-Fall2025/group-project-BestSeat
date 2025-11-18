@@ -31,26 +31,26 @@
             <div class="mb-3">
               <label class="form-label">Website Source</label><br>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="Ticketmaster" id="ticketmaster">
+                <input class="form-check-input" type="checkbox" name="source" value="Ticketmaster" id="ticketmaster" {{#if (isSourceSelected selectedSources 'Ticketmaster')}}checked{{/if}}>
                 <label class="form-check-label" for="ticketmaster">Ticketmaster</label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="StubHub" id="stubhub">
+                <input class="form-check-input" type="checkbox" name="source" value="StubHub" id="stubhub" {{#if (isSourceSelected selectedSources 'StubHub')}}checked{{/if}}>
                 <label class="form-check-label" for="stubhub">StubHub</label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="viagogo" id="viagogo">
+                <input class="form-check-input" type="checkbox" name="source" value="viagogo" id="viagogo" {{#if (isSourceSelected selectedSources 'viagogo')}}checked{{/if}}>
                 <label class="form-check-label" for="viagogo">Viagogo</label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="SeatGeek" id="seatgeek">
+                <input class="form-check-input" type="checkbox" name="source" value="SeatGeek" id="seatgeek" {{#if (isSourceSelected selectedSources 'SeatGeek')}}checked{{/if}}>
                 <label class="form-check-label" for="seatgeek">SeatGeek</label>
               </div>
             </div>
 
             <div class="mb-3">
-              <label for="priceRange" class="form-label">Maximum Price</label>
-              <input type="range" class="form-range" min="0" max="1000" step="10" id="priceRange" name="priceRange">
+              <label for="priceRange" class="form-label">Maximum Price: $<span id="priceValue">{{#if priceRange}}{{priceRange}}{{else}}1000+{{/if}}</span></label>
+              <input type="range" class="form-range" min="0" max="1000" step="10" id="priceRange" name="priceRange" value="{{#if priceRange}}{{priceRange}}{{else}}1000{{/if}}">
               <div class="d-flex justify-content-between">
                 <small>$0</small>
                 <small>$1000+</small>
@@ -60,23 +60,23 @@
             <div class="mb-3">
               <label for="genre" class="form-label">Genre</label>
               <select class="form-select" id="genre" name="genre">
-                <option value="">All Genres</option>
-                <option value="Pop">Pop</option>
-                <option value="Rock">Rock</option>
-                <option value="Hip-Hop">Rap</option>
-                <option value="Pop">EDM</option>
-                <option value="Classical">Classical</option>
+                <option value="" {{#unless genre}}selected{{/unless}}>All Genres</option>
+                <option value="Pop" {{#if (eq genre 'Pop')}}selected{{/if}}>Pop</option>
+                <option value="Rock" {{#if (eq genre 'Rock')}}selected{{/if}}>Rock</option>
+                <option value="Hip-Hop" {{#if (eq genre 'Hip-Hop')}}selected{{/if}}>Rap</option>
+                <option value="EDM" {{#if (eq genre 'EDM')}}selected{{/if}}>EDM</option>
+                <option value="Classical" {{#if (eq genre 'Classical')}}selected{{/if}}>Classical</option>
               </select>
             </div>
 
             <div class="mb-3">
               <label for="date" class="form-label">Date</label>
-              <input type="date" class="form-control" id="date" name="date">
+              <input type="date" class="form-control" id="date" name="date" value="{{date}}">
             </div>
 
             <div class="mb-3">
               <label for="location" class="form-label">Location</label>
-              <input type="text" class="form-control" id="location" name="location" placeholder="City, State">
+              <input type="text" class="form-control" id="location" name="location" placeholder="City, State" value="{{location}}">
             </div>
 
             <button type="submit" class="btn btn-success w-100">Apply Filters</button>
@@ -121,3 +121,17 @@
     </div>
   </div>
 </div>
+
+<script>
+  // Update price range display dynamically
+  const priceRange = document.getElementById('priceRange');
+  const priceValue = document.getElementById('priceValue');
+  
+  priceRange.addEventListener('input', function() {
+    if (this.value >= 1000) {
+      priceValue.textContent = '1000+';
+    } else {
+      priceValue.textContent = this.value;
+    }
+  });
+</script>
