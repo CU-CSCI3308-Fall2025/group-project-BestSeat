@@ -153,6 +153,14 @@ function normalizeTicketmasterEvent(event) {
   };
 }
 
+/*
+Finds an event by its source from the results of Real-Time Events
+*/
+function searchEventBySource(events, source) {
+  return events.find(event => event.source === source);
+}
+
+
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
@@ -337,7 +345,11 @@ app.get('/search', auth, async (req, res) => {
     const results = await axios({
         url: 'https://app.ticketmaster.com/discovery/v2/events.json',
         method: 'GET',
-        params: apiParams
+        params: {
+          apikey: process.env.TICKETMASTER_API_KEY,
+          keyword: searchTerm,
+          size: 30,
+        }
       });
       
     if(!results.data._embedded || !results.data._embedded.events)
@@ -427,8 +439,77 @@ app.post('/profile/update-name', auth, (req, res) => {
 
 
 //comparisons route
-app.get('/comparisons', auth, (req, res) => {
-  res.render('pages/comparisons', { isComparisonsPage: true });
+app.get('/comparisons', auth, async (req, res) => {
+  const eventId = req.query.eventId || '';
+  let ticketMasterResponse = null;
+  let ticketMasterEvent = null;
+  //Get event data from Ticketmaster
+  try
+  {
+    ticketMasterResponse = await axios({
+        url: `https://app.ticketmaster.com/discovery/v2/events/${eventId}.json`,
+        method: 'GET',
+        params: {
+          apikey: process.env.TICKETMASTER_API_KEY,
+        }
+      });
+
+    if(!ticketMasterResponse.data)
+    {
+        return res.render('pages/comparisons', { results: [], message: 'Event not found on TicketMaster', isComparisonsPage: true });
+    }
+    else
+    {
+        // Normalize event from Ticketmaster to our standard format
+        ticketMasterEvent = normalizeEventData(ticketMasterResponse.data, 'ticketmaster');
+        console.log('TicketMaster Event:', ticketMasterEvent);
+    }
+  }
+  catch(error)
+  {
+    console.error(error);
+    return res.render('pages/comparisons', { results: [], message: 'Error loading event from TicketMaster', error: true });
+  }
+
+  //Using Real-Time Events API 
+  const query = {
+    method: 'GET',
+    url: 'https://real-time-events-search.p.rapidapi.com/search-events',
+    params: {
+      query: ticketMasterEvent.name,
+      start: '0'
+    },
+    headers: {
+      'x-rapidapi-key': process.env.RAPID_API_KEY,
+      'x-rapidapi-host': 'real-time-events-search.p.rapidapi.com'
+    }
+  };
+
+  try
+  {
+    const rteResponse = await axios.request(query);
+    console.log('Real-Time Events Response:', rteResponse.data);
+    if(!rteResponse.data || rteResponse.data.length == 0)
+    {
+      return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'No other sellers found', isComparisonsPage: true });
+    }
+
+    // Extrac the sellers from the response
+    const event_sellers = rteResponse.data.data.ticket_links;
+
+    // const normalizedEvents = rteResponse.data.data.map(event => {
+    //   let source_index = 0;
+    //   return normalizeEventData(event, sourceNames[source_index] || 'unknown');
+    // });
+
+    res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: event_sellers, message: 'Loaded successfully', isComparisonsPage: true })
+  }
+  catch(error)
+  {
+    console.error(error);
+    return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'Error loading event', error: true });
+  }
+
 });
 
 app.get('/discover', auth, async (req, res) => {
