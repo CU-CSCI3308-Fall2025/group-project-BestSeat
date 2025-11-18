@@ -533,6 +533,58 @@ app.get('/discover', auth, async (req, res) => {
     res.render('pages/discover', { results: [], message: 'Error loading events', error: true });
   }
 });
+//change password route
+app.post('/profile/change-password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const userId = req.session.user.id;
+    if (newPassword !== confirmPassword) {
+      return res.render('pages/profile', {
+        user: req.session.user,
+        error: 'New passwords do not match.',
+        isProfilePage: true
+      });
+    }
+
+
+    const query = 'SELECT pass FROM users WHERE id = $1;';
+    const user = await db.oneOrNone(query, [userId]);
+
+
+    if (!user) {
+      return res.render('pages/profile', {
+        user: req.session.user,
+        error: 'User not found.',
+        isProfilePage: true
+      });
+    }
+    const passwordMatch = await bcrypt.compare(currentPassword, user.pass);
+    if (!passwordMatch) {
+      return res.render('pages/profile', {
+        user: req.session.user,
+        error: 'Current password is incorrect.',
+        isProfilePage: true
+      });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updateQuery = 'UPDATE users SET pass = $1 WHERE id = $2;';
+    await db.none(updateQuery, [hashedPassword, userId]);
+
+
+    res.render('pages/profile', {
+      user: req.session.user,
+      message: 'Password successfully changed!',
+      isProfilePage: true
+    });
+  } catch (error) {
+    console.error(error);
+    res.render('pages/profile', {
+      user: req.session.user,
+      error: 'An error occurred while changing the password.',
+      isProfilePage: true
+    });
+  }
+});
 
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
