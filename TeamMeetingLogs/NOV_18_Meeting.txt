@@ -1,0 +1,12 @@
+Minutes: 2:30 - 2:39
+
+Eyal: Explained New way with the Rapid API, Jen accepts new way.
+No demo due to Github error.
+
+Go over board:
+Tate: implemented logout button, change password functionality. Next: work on error message.
+Kyle: Finished most of UI, now works on comparisons.
+Eyal: Built route from search to comparison, finished API calls.
+
+Standing on time for goal to finish project.
+Jen: explains finishing touches for project.
