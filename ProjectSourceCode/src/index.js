@@ -170,6 +170,17 @@ const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
+  helpers: {
+    // Check if a source is selected
+    isSourceSelected: function(selectedSources, source) {
+      if (!selectedSources || !Array.isArray(selectedSources)) return false;
+      return selectedSources.includes(source);
+    },
+    // Compare two values for equality
+    eq: function(a, b) {
+      return a === b;
+    }
+  }
 });
 
 // database configuration
@@ -234,10 +245,11 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
+  const email = req.body.email.toLowerCase();
   const query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
   try 
   {
-    await db.none(query, [req.body.email, hash]);
+    await db.none(query, [email, hash]);
     res.redirect('/login');
   }
   catch(err)
@@ -253,8 +265,9 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
+  const email = req.body.email.toLowerCase();
   let query = `SELECT * FROM users WHERE email = $1;`;
-  let user = await db.oneOrNone(query, [req.body.email]);
+  let user = await db.oneOrNone(query, [email]);
   if (!user) {
     return res.render('pages/login', { error: "User not found" });
   }
@@ -262,6 +275,9 @@ app.post('/login', async (req, res) => {
   {
     const match = await bcrypt.compare(req.body.password, user.pass);
     if (match) {
+      user.email = email;
+      user.displayName = email.split('@')[0];
+
       req.session.user = user;
       req.session.save(() => {
         res.redirect('/search');
@@ -270,6 +286,9 @@ app.post('/login', async (req, res) => {
     else {
       res.render('pages/login', {error: "Invalid password"});
     }
+    //console.log(user.email);
+    //console.log(user.displayName);
+    //console.log(user.password);
   }
 });
 
@@ -282,8 +301,47 @@ const auth = (req, res, next) => {
 
 app.get('/search', auth, async (req, res) => {
   const searchTerm = req.query.searchTerm || '';
+  const genre = req.query.genre || '';
+  const date = req.query.date || '';
+  const location = req.query.location || '';
+  const priceRange = req.query.priceRange || '';
+  const sources = req.query.source || [];
+  
+  // Normalize sources to array
+  const sourcesArray = Array.isArray(sources) ? sources : (sources ? [sources] : []);
+  
   try
   {
+    // Ticketmaster API parameters
+    const apiParams = {
+      apikey: process.env.API_KEY,
+      size: 30,
+    };
+    
+    // Add keyword search if provided
+    if (searchTerm) {
+      apiParams.keyword = searchTerm;
+    }
+    
+    // Add genre filter if provided
+    if (genre) {
+      apiParams.classificationName = genre;
+    }
+    
+    // Add date filter if provided
+    if (date) {
+      // Format: YYYY-MM-DD
+      const startDateTime = `${date}T00:00:00Z`;
+      const endDateTime = `${date}T23:59:59Z`;
+      apiParams.startDateTime = startDateTime;
+      apiParams.endDateTime = endDateTime;
+    }
+    
+    // Add location filter if provided (city/state)
+    if (location) {
+      apiParams.city = location;
+    }
+
     const results = await axios({
         url: 'https://app.ticketmaster.com/discovery/v2/events.json',
         method: 'GET',
@@ -293,30 +351,92 @@ app.get('/search', auth, async (req, res) => {
           size: 30,
         }
       });
+      
     if(!results.data._embedded || !results.data._embedded.events)
     {
-      return res.render('pages/search', { results: [], message: 'No events found', isSearchPage: true });
+      return res.render('pages/search', { 
+        results: [], 
+        message: 'No events found', 
+        isSearchPage: true,
+        searchTerm,
+        genre,
+        date,
+        location,
+        priceRange,
+        selectedSources: sourcesArray
+      });
     }
     else
     {
       // Normalize all events from Ticketmaster to our standard format
-      const normalizedEvents = results.data._embedded.events.map(event => 
+      let normalizedEvents = results.data._embedded.events.map(event => 
         normalizeEventData(event, 'ticketmaster')
       );
-      res.render('pages/search', { results: normalizedEvents, isSearchPage: true });
+      
+      // Apply client-side filters that can't be handled by the API
+      
+      // Filter by price range if provided
+      if (priceRange && priceRange !== '0') {
+        const maxPrice = parseFloat(priceRange);
+        normalizedEvents = normalizedEvents.filter(event => {
+          if (!event.pricing || !event.pricing.min) return true; // Include events without price info
+          return event.pricing.min <= maxPrice;
+        });
+      }
+      
+      // Filter by data source if any are selected
+      if (sourcesArray.length > 0) {
+        normalizedEvents = normalizedEvents.filter(event => {
+          const eventSource = event.data_source.toLowerCase();
+          return sourcesArray.some(source => source.toLowerCase() === eventSource);
+        });
+      }
+      
+      res.render('pages/search', { 
+        results: normalizedEvents, 
+        isSearchPage: true,
+        searchTerm,
+        genre,
+        date,
+        location,
+        priceRange,
+        selectedSources: sourcesArray
+      });
     }
   }
   catch(error)
   {
     console.error(error);
-    res.render('pages/search', { results: [], message: 'Error loading events', error: true });
+    res.render('pages/search', { 
+      results: [], 
+      message: 'Error loading events', 
+      error: true,
+      searchTerm,
+      genre,
+      date,
+      location,
+      priceRange,
+      selectedSources: sourcesArray
+    });
   }
 });
 
 //profile route
 app.get('/profile', auth, (req, res) => {
-  res.render('pages/profile', { isProfilePage: true });
+  res.render('pages/profile', { 
+    isProfilePage: true,
+    user: req.session.user
+  });
 });
+
+app.post('/profile/update-name', auth, (req, res) => {
+  const { displayName } = req.body;
+
+  req.session.user.displayName = displayName;
+
+  res.json({ success: true, displayName });
+});
+
 
 //comparisons route
 app.get('/comparisons', auth, async (req, res) => {
