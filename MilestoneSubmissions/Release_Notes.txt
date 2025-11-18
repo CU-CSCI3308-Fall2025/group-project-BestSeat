@@ -15,3 +15,8 @@ Users can see thier profile page when clicking on the navbar icon
 Implemented comprehensive data normalization system for event data from multiple potential API sources
 Normalized event data includes venue details, pricing, date/time, images, classifications, sales info, and accessibility
 Moved authentication middleware to protect additional routes such as discover and search
+
+18/11:
+Changed API source to Rapid API for comparisons.
+Comparison route returns links to different sellers for event found by Ticketmaster result.
+Events on search page lead to comparisons page.
