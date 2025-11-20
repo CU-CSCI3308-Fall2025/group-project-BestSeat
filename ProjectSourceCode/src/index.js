@@ -314,7 +314,7 @@ app.get('/search', auth, async (req, res) => {
   {
     // Ticketmaster API parameters
     const apiParams = {
-      apikey: process.env.API_KEY,
+      apikey: process.env.TICKETMASTER_API_KEY,
       size: 30,
     };
     
@@ -345,11 +345,7 @@ app.get('/search', auth, async (req, res) => {
     const results = await axios({
         url: 'https://app.ticketmaster.com/discovery/v2/events.json',
         method: 'GET',
-        params: {
-          apikey: process.env.TICKETMASTER_API_KEY,
-          keyword: searchTerm,
-          size: 30,
-        }
+        params: apiParams
       });
       
     if(!results.data._embedded || !results.data._embedded.events)
