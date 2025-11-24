@@ -29,26 +29,6 @@
               <input type="text" class="form-control" id="searchTerm" name="searchTerm" placeholder="Enter event name or keyword" value="{{searchTerm}}">
             </div>
             <div class="mb-3">
-              <label class="form-label">Website Source</label><br>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="Ticketmaster" id="ticketmaster" {{#if (isSourceSelected selectedSources 'Ticketmaster')}}checked{{/if}}>
-                <label class="form-check-label" for="ticketmaster">Ticketmaster</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="StubHub" id="stubhub" {{#if (isSourceSelected selectedSources 'StubHub')}}checked{{/if}}>
-                <label class="form-check-label" for="stubhub">StubHub</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="viagogo" id="viagogo" {{#if (isSourceSelected selectedSources 'viagogo')}}checked{{/if}}>
-                <label class="form-check-label" for="viagogo">Viagogo</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="source" value="SeatGeek" id="seatgeek" {{#if (isSourceSelected selectedSources 'SeatGeek')}}checked{{/if}}>
-                <label class="form-check-label" for="seatgeek">SeatGeek</label>
-              </div>
-            </div>
-
-            <div class="mb-3">
               <label for="priceRange" class="form-label">Maximum Price: $<span id="priceValue">{{#if priceRange}}{{priceRange}}{{else}}1000+{{/if}}</span></label>
               <input type="range" class="form-range" min="0" max="1000" step="10" id="priceRange" name="priceRange" value="{{#if priceRange}}{{priceRange}}{{else}}1000{{/if}}">
               <div class="d-flex justify-content-between">
