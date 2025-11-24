@@ -183,11 +183,8 @@ const hbs = handlebars.create({
   }
 });
 
-// database configuration
-// Support a full `DATABASE_URL` (Render managed DB) or explicit env vars.
-// Fall back to host 'db' for local Docker Compose development.
 const connectionString = process.env.DATABASE_URL || null;
-const dbConfig = connectionString || {
+const dbConfig = {
   host: process.env.POSTGRES_HOST || process.env.DB_HOST || 'db',
   port: process.env.POSTGRES_PORT || 5432,
   database: process.env.POSTGRES_DB,
@@ -195,7 +192,19 @@ const dbConfig = connectionString || {
   password: process.env.POSTGRES_PASSWORD,
 };
 
-const db = pgp(connectionString || dbConfig);
+
+let pgConnection;
+
+const enableSSL = Boolean(connectionString) && (process.env.DATABASE_SSL === 'true' || process.env.NODE_ENV === 'production');
+if (connectionString) {
+  pgConnection = enableSSL
+    ? { connectionString, ssl: { rejectUnauthorized: false } }
+    : { connectionString };
+} else {
+  pgConnection = dbConfig;
+}
+
+const db = pgp(pgConnection);
 
 // test your database
 db.connect()
