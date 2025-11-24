@@ -26,7 +26,7 @@ function normalizeEventData(eventData, source) {
   }
   // TODO: add more providers here
   // else if (source === 'stubhub') { return normalizeStubhubEvent(eventData); }
-  
+
   // Default fallback
   return {
     id: eventData.id || null,
@@ -41,34 +41,34 @@ function normalizeEventData(eventData, source) {
 function normalizeTicketmasterEvent(event) {
   // Extract classification data
   const primaryClassification = event.classifications?.[0] || {};
-  
+
   // Extract venue information
   const venue = event._embedded?.venues?.[0] || {};
-  
+
   // Extract date/time information
   const dates = event.dates?.start || {};
-  
+
   // Extract price information
   const priceRanges = event.priceRanges?.[0] || {};
-  
+
   // Extract promoter information
   const promoter = event.promoter || event.promoters?.[0] || {};
-  
+
   return {
     // Core Identifiers
     id: event.id,
     data_source: 'ticketmaster',
-    
+
     // Basic Information
     name: event.name || 'Untitled Event',
     description: event.info || event.pleaseNote || null,
     type: event.type || 'event',
-    
+
     // Classification
     category: primaryClassification.segment?.name || null,
     genre: primaryClassification.genre?.name || null,
     subGenre: primaryClassification.subGenre?.name || null,
-    
+
     // URLs and Media
     url: event.url || null,
     images: event.images?.map(img => ({
@@ -78,7 +78,7 @@ function normalizeTicketmasterEvent(event) {
       ratio: img.ratio,
       fallback: img.fallback || false,
     })) || [],
-    
+
     // Date and Time
     date: {
       start: dates.localDate || null,
@@ -89,7 +89,7 @@ function normalizeTicketmasterEvent(event) {
       tbd: dates.dateTBD || false,
       noSpecificTime: dates.noSpecificTime || false,
     },
-    
+
     // Venue Information
     venue: {
       id: venue.id || null,
@@ -108,7 +108,7 @@ function normalizeTicketmasterEvent(event) {
       timezone: venue.timezone || null,
       url: venue.url || null,
     },
-    
+
     // Pricing
     pricing: {
       currency: priceRanges.currency || 'USD',
@@ -116,7 +116,7 @@ function normalizeTicketmasterEvent(event) {
       max: priceRanges.max || null,
       type: priceRanges.type || null,
     },
-    
+
     // Sales Information
     sales: {
       public: {
@@ -129,10 +129,10 @@ function normalizeTicketmasterEvent(event) {
         endDateTime: presale.endDateTime || null,
       })) || [],
     },
-    
+
     // Status
     status: event.dates?.status?.code || 'unknown',
-    
+
     // Additional Information
     accessibility: event.accessibility || null,
     ageRestrictions: event.ageRestrictions?.legalAgeEnforced || null,
@@ -141,7 +141,7 @@ function normalizeTicketmasterEvent(event) {
       id: promoter.id || null,
       name: promoter.name || null,
     },
-    
+
     // Products (Attractions/Performers)
     attractions: event._embedded?.attractions?.map(attraction => ({
       id: attraction.id,
@@ -172,12 +172,12 @@ const hbs = handlebars.create({
   partialsDir: __dirname + '/views/partials',
   helpers: {
     // Check if a source is selected
-    isSourceSelected: function(selectedSources, source) {
+    isSourceSelected: function (selectedSources, source) {
       if (!selectedSources || !Array.isArray(selectedSources)) return false;
       return selectedSources.includes(source);
     },
     // Compare two values for equality
-    eq: function(a, b) {
+    eq: function (a, b) {
       return a === b;
     }
   }
@@ -185,8 +185,11 @@ const hbs = handlebars.create({
 
 // database configuration
 const dbConfig = {
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  host: 'db', // the database server
+  port: 5432, // the database port
+  database: process.env.POSTGRES_DB, // the database name
+  user: process.env.POSTGRES_USER, // the user account to connect with
+  password: process.env.POSTGRES_PASSWORD, // the password of the user account
 };
 
 const db = pgp(dbConfig);
@@ -244,13 +247,11 @@ app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
   const email = req.body.email.toLowerCase();
   const query = `INSERT INTO users (email, pass) VALUES ($1, $2);`;
-  try 
-  {
+  try {
     await db.none(query, [email, hash]);
     res.redirect('/login');
   }
-  catch(err)
-  {
+  catch (err) {
     console.error(err);
     res.status(400).render('pages/register', { error: 'Registration failed. Email may already exist.' });
   }
@@ -268,8 +269,7 @@ app.post('/login', async (req, res) => {
   if (!user) {
     return res.render('pages/login', { error: "User not found" });
   }
-  else
-  {
+  else {
     const match = await bcrypt.compare(req.body.password, user.pass);
     if (match) {
       user.email = email;
@@ -281,7 +281,7 @@ app.post('/login', async (req, res) => {
       });
     }
     else {
-      res.render('pages/login', {error: "Invalid password"});
+      res.render('pages/login', { error: "Invalid password" });
     }
     //console.log(user.email);
     //console.log(user.displayName);
@@ -303,28 +303,27 @@ app.get('/search', auth, async (req, res) => {
   const location = req.query.location || '';
   const priceRange = req.query.priceRange || '';
   const sources = req.query.source || [];
-  
+
   // Normalize sources to array
   const sourcesArray = Array.isArray(sources) ? sources : (sources ? [sources] : []);
-  
-  try
-  {
+
+  try {
     // Ticketmaster API parameters
     const apiParams = {
       apikey: process.env.TICKETMASTER_API_KEY,
       size: 30,
     };
-    
+
     // Add keyword search if provided
     if (searchTerm) {
       apiParams.keyword = searchTerm;
     }
-    
+
     // Add genre filter if provided
     if (genre) {
       apiParams.classificationName = genre;
     }
-    
+
     // Add date filter if provided
     if (date) {
       // Format: YYYY-MM-DD
@@ -333,23 +332,22 @@ app.get('/search', auth, async (req, res) => {
       apiParams.startDateTime = startDateTime;
       apiParams.endDateTime = endDateTime;
     }
-    
+
     // Add location filter if provided (city/state)
     if (location) {
       apiParams.city = location;
     }
 
     const results = await axios({
-        url: 'https://app.ticketmaster.com/discovery/v2/events.json',
-        method: 'GET',
-        params: apiParams
-      });
-      
-    if(!results.data._embedded || !results.data._embedded.events)
-    {
-      return res.render('pages/search', { 
-        results: [], 
-        message: 'No events found', 
+      url: 'https://app.ticketmaster.com/discovery/v2/events.json',
+      method: 'GET',
+      params: apiParams
+    });
+
+    if (!results.data._embedded || !results.data._embedded.events) {
+      return res.render('pages/search', {
+        results: [],
+        message: 'No events found',
         isSearchPage: true,
         searchTerm,
         genre,
@@ -359,15 +357,14 @@ app.get('/search', auth, async (req, res) => {
         selectedSources: sourcesArray
       });
     }
-    else
-    {
+    else {
       // Normalize all events from Ticketmaster to our standard format
-      let normalizedEvents = results.data._embedded.events.map(event => 
+      let normalizedEvents = results.data._embedded.events.map(event =>
         normalizeEventData(event, 'ticketmaster')
       );
-      
+
       // Apply client-side filters that can't be handled by the API
-      
+
       // Filter by price range if provided
       if (priceRange && priceRange !== '0') {
         const maxPrice = parseFloat(priceRange);
@@ -376,7 +373,7 @@ app.get('/search', auth, async (req, res) => {
           return event.pricing.min <= maxPrice;
         });
       }
-      
+
       // Filter by data source if any are selected
       if (sourcesArray.length > 0) {
         normalizedEvents = normalizedEvents.filter(event => {
@@ -384,9 +381,9 @@ app.get('/search', auth, async (req, res) => {
           return sourcesArray.some(source => source.toLowerCase() === eventSource);
         });
       }
-      
-      res.render('pages/search', { 
-        results: normalizedEvents, 
+
+      res.render('pages/search', {
+        results: normalizedEvents,
         isSearchPage: true,
         searchTerm,
         genre,
@@ -397,12 +394,11 @@ app.get('/search', auth, async (req, res) => {
       });
     }
   }
-  catch(error)
-  {
+  catch (error) {
     console.error(error);
-    res.render('pages/search', { 
-      results: [], 
-      message: 'Error loading events', 
+    res.render('pages/search', {
+      results: [],
+      message: 'Error loading events',
       error: true,
       searchTerm,
       genre,
@@ -416,7 +412,7 @@ app.get('/search', auth, async (req, res) => {
 
 //profile route
 app.get('/profile', auth, (req, res) => {
-  res.render('pages/profile', { 
+  res.render('pages/profile', {
     isProfilePage: true,
     user: req.session.user
   });
@@ -437,29 +433,25 @@ app.get('/comparisons', auth, async (req, res) => {
   let ticketMasterResponse = null;
   let ticketMasterEvent = null;
   //Get event data from Ticketmaster
-  try
-  {
+  try {
     ticketMasterResponse = await axios({
-        url: `https://app.ticketmaster.com/discovery/v2/events/${eventId}.json`,
-        method: 'GET',
-        params: {
-          apikey: process.env.TICKETMASTER_API_KEY,
-        }
-      });
+      url: `https://app.ticketmaster.com/discovery/v2/events/${eventId}.json`,
+      method: 'GET',
+      params: {
+        apikey: process.env.TICKETMASTER_API_KEY,
+      }
+    });
 
-    if(!ticketMasterResponse.data)
-    {
-        return res.render('pages/comparisons', { results: [], message: 'Event not found on TicketMaster', isComparisonsPage: true });
+    if (!ticketMasterResponse.data) {
+      return res.render('pages/comparisons', { results: [], message: 'Event not found on TicketMaster', isComparisonsPage: true });
     }
-    else
-    {
-        // Normalize event from Ticketmaster to our standard format
-        ticketMasterEvent = normalizeEventData(ticketMasterResponse.data, 'ticketmaster');
-        console.log('TicketMaster Event:', ticketMasterEvent);
+    else {
+      // Normalize event from Ticketmaster to our standard format
+      ticketMasterEvent = normalizeEventData(ticketMasterResponse.data, 'ticketmaster');
+      console.log('TicketMaster Event:', ticketMasterEvent);
     }
   }
-  catch(error)
-  {
+  catch (error) {
     console.error(error);
     return res.render('pages/comparisons', { results: [], message: 'Error loading event from TicketMaster', error: true });
   }
@@ -478,27 +470,27 @@ app.get('/comparisons', auth, async (req, res) => {
     }
   };
 
-  try
-  {
+  try {
     const rteResponse = await axios.request(query);
     console.log('Real-Time Events Response:', rteResponse.data);
-    if(!rteResponse.data || rteResponse.data.length == 0)
-    {
+    if (!rteResponse.data || !rteResponse.data.data || rteResponse.data.data.length == 0) {
       return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'No other sellers found', isComparisonsPage: true });
     }
 
-    // Extrac the sellers from the response
-    const event_sellers = rteResponse.data.data.ticket_links;
+    let allTicketLinks = [];
+    rteResponse.data.data.forEach(event => {
+      if (event.ticket_links && Array.isArray(event.ticket_links)) {
+        allTicketLinks = allTicketLinks.concat(event.ticket_links);
+      }
+    });
 
-    // const normalizedEvents = rteResponse.data.data.map(event => {
-    //   let source_index = 0;
-    //   return normalizeEventData(event, sourceNames[source_index] || 'unknown');
-    // });
+    if (allTicketLinks.length === 0) {
+      return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'No other sellers found', isComparisonsPage: true });
+    }
 
-    res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: event_sellers, message: 'Loaded successfully', isComparisonsPage: true })
+    res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: allTicketLinks, message: 'Loaded successfully', isComparisonsPage: true })
   }
-  catch(error)
-  {
+  catch (error) {
     console.error(error);
     return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'Error loading event', error: true });
   }
@@ -517,7 +509,7 @@ app.get('/discover', auth, async (req, res) => {
       },
     });
     // Normalize all events from Ticketmaster to our standard format
-    const normalizedEvents = results.data._embedded.events.map(event => 
+    const normalizedEvents = results.data._embedded.events.map(event =>
       normalizeEventData(event, 'ticketmaster')
     );
     res.render('pages/discover', { results: normalizedEvents });
@@ -586,16 +578,12 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/welcome', (req, res) => {
-  res.json({status: 'success', message: 'Welcome!'});
+  res.json({ status: 'success', message: 'Welcome!' });
 });
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-const { Pool } = require('pg');
-const pool = new Pool(dbConfig);
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+module.exports = app.listen(3000);
+console.log('Server is listening on port 3000');

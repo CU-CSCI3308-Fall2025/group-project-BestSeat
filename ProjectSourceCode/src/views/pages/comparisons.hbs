@@ -2,56 +2,74 @@
 {{> message}}
 
 <div class="container mt-4">
-    <div>
-        <h2>{{eventName}}{{#unless eventName}}Event{{/unless}}</h2>
+    {{#if ticketMaster}}
+    <div class="mb-4">
+        <h2>{{ticketMaster.name}}</h2>
         <p>
-            {{#if eventDate}}<strong>Date:</strong> {{eventDate}} | {{else}}<strong>Date:</strong> Date | {{/if}}
-            {{#if eventLocation}}<strong>Location:</strong> {{eventLocation}}{{else}}<strong>Location:</strong> Location {{/if}}
+            {{#if ticketMaster.date.start}}<strong>Date:</strong> {{ticketMaster.date.start}} {{#if
+            ticketMaster.date.time}}at {{ticketMaster.date.time}}{{/if}} | {{/if}}
+            {{#if ticketMaster.venue.city}}<strong>Location:</strong> {{ticketMaster.venue.city}},
+            {{ticketMaster.venue.stateCode}}{{/if}}
         </p>
+        {{#if ticketMaster.images.[0].url}}
+        <img src="{{ticketMaster.images.[0].url}}" alt="{{ticketMaster.name}}"
+            style="max-width: 300px; margin-bottom: 20px;">
+        {{/if}}
     </div>
+    {{/if}}
+
+    <h3 class="mb-3">Available Tickets on Different Platforms</h3>
+
+    {{#if listings.length}}
     <div class="row">
-        <div class="col-md-6 col-lg-3">
-            <div class="card">
+        {{#each listings}}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title">Ticketmaster</h5>
-                    <p><strong>Price:</strong> ${{ticketmaster.price}}</p>
-                    <p><strong>Seat Location:</strong> {{ticketmaster.seatLocation}}</p>
-                    <p><strong>Link:</strong> <a href="{{ticketmaster.link}}" target="_blank">{{ticketmaster.link}}</a>
+                    <h5 class="card-title">
+                        {{#if this.source}}{{this.source}}{{else}}Ticket Seller{{/if}}
+                    </h5>
+
+                    {{#if this.price}}
+                    <p class="card-text">
+                        <strong>Price:</strong>
+                        {{#if this.price.currency}}{{this.price.currency}} {{/if}}
+                        {{this.price}}
                     </p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">StubHub</h5>
-                    <p><strong>Price:</strong> ${{stubhub.price}}</p>
-                    <p><strong>Seat Location:</strong> {{stubhub.seatLocation}}</p>
-                    <p><strong>Link:</strong> <a href="{{stubhub.link}}" target="_blank">{{stubhub.link}}</a></p>
-                </div>
-            </div>
-        </div>
+                    {{/if}}
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Viagogo</h5>
-                    <p><strong>Price:</strong> ${{viagogo.price}}</p>
-                    <p><strong>Seat Location:</strong> {{viagogo.seatLocation}}</p>
-                    <p><strong>Link:</strong> <a href="{{viagogo.link}}" target="_blank">{{viagogo.link}}</a></p>
-                </div>
-            </div>
-        </div>
+                    {{#if this.event_name}}
+                    <p class="card-text">
+                        <small class="text-muted"><strong>Event:</strong> {{this.event_name}}</small>
+                    </p>
+                    {{/if}}
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">SeatGeek</h5>
-                    <p><strong>Price:</strong> ${{seatgeek.price}}</p>
-                    <p><strong>Seat Location:</strong> {{seatgeek.seatLocation}}</p>
-                    <p><strong>Link:</strong> <a href="{{seatgeek.link}}" target="_blank">{{seatgeek.link}}</a></p>
+                    {{#if this.event_date}}
+                    <p class="card-text">
+                        <small class="text-muted"><strong>Date:</strong> {{this.event_date}}</small>
+                    </p>
+                    {{/if}}
+
+                    {{#if this.venue}}
+                    <p class="card-text">
+                        <small class="text-muted"><strong>Venue:</strong> {{this.venue}}</small>
+                    </p>
+                    {{/if}}
+                </div>
+                <div class="card-footer bg-white text-center">
+                    {{#if this.url}}
+                    <a href="{{this.url}}" target="_blank" class="btn btn-primary btn-sm">Buy Tickets</a>
+                    {{else}}
+                    <a href="{{this.link}}" target="_blank" class="btn btn-primary btn-sm">Buy Tickets</a>
+                    {{/if}}
                 </div>
             </div>
         </div>
+        {{/each}}
     </div>
+    {{else}}
+    <div class="alert alert-info">
+        {{#if message}}{{message}}{{else}}No additional ticket sellers found{{/if}}
+    </div>
+    {{/if}}
 </div>
