@@ -10,6 +10,7 @@
   <div class="card shadow-sm w-100" style="max-width: 480px;">
     <div class="card-body">
       <h1 class="card-title text-center mb-4">Login</h1>
+      {{> message}}
       <form action="/login" method="POST" class="text-start">
         <div class="mb-3">
           <label for="email" class="form-label">Email</label>
@@ -24,8 +25,7 @@
           <button type="submit" class="btn btn-primary">Login</button>
         </div>
         <p class="text-center mt-3">Don't have an account? <a href="/register">Register</a>.</p>
-      </form>
     </div>
   </div>
 </div>
-{{> message}}
+ 

@@ -27,7 +27,12 @@
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">
-                        {{#if this.source}}{{this.source}}{{else}}Ticket Seller{{/if}}
+                        {{#if this.source}}
+                        {{#if this.source_icon}}
+                        <img src="{{this.source_icon}}" alt="{{this.source}}" style="height: 24px; max-width: 100px; margin-right: 8px; vertical-align: middle; object-fit: contain;" onerror="this.style.display='none'">
+                        {{/if}}
+                        <span style="vertical-align: middle;">{{this.source}}</span>
+                        {{else}}Ticket Seller{{/if}}
                     </h5>
 
                     {{#if this.price}}

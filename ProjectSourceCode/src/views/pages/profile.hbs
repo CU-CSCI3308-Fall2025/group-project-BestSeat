@@ -4,18 +4,6 @@
   <div class="card p-4 shadow-sm" style="background-color: #f8f9fa;">
     <h3 class="mb-4 fw-bold">Profile Settings</h3>
 
-    <div class="d-flex flex-column flex-md-row align-items-center mb-4">
-      <img src="./src/resources/img/default_profile.png"
-        alt="{{user.displayName}}'s Profile Picture" class="rounded mb-3 mb-md-0 me-md-4"
-        style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;" />
-      <form action="/profile/upload-picture" method="POST" enctype="multipart/form-data">
-        <div class="d-flex flex-column">
-          <input type="file" name="profilePicture" accept="image/*" class="form-control mb-2" style="max-width:250px;">
-          <button type="submit" class="btn btn-primary">Upload New Picture</button>
-        </div>
-      </form>
-    </div>
-
     <div class="mb-4">
       <strong>Email:</strong> {{user.email}}
     </div>

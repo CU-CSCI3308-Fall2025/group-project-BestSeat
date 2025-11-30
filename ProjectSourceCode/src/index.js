@@ -153,7 +153,14 @@ function normalizeTicketmasterEvent(event) {
   };
 }
 
-/*
+
+function getLogoFromListing(listing) {
+  if (listing.fav_icon) {
+    return listing.fav_icon;
+  }
+  
+  return null;
+}/*
 Finds an event by its source from the results of Real-Time Events
 */
 function searchEventBySource(events, source) {
@@ -499,6 +506,12 @@ app.get('/comparisons', auth, async (req, res) => {
     if (allTicketLinks.length === 0) {
       return res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: [], message: 'No other sellers found', isComparisonsPage: true });
     }
+
+    // Add logo URLs to each listing
+    allTicketLinks = allTicketLinks.map(listing => ({
+      ...listing,
+      source_icon: getLogoFromListing(listing)
+    }));
 
     res.render('pages/comparisons', { ticketMaster: ticketMasterEvent, listings: allTicketLinks, message: 'Loaded successfully', isComparisonsPage: true })
   }
