@@ -28,14 +28,6 @@
               <label for="searchTerm" class="form-label">Search Events</label>
               <input type="text" class="form-control" id="searchTerm" name="searchTerm" placeholder="Enter event name or keyword" value="{{searchTerm}}">
             </div>
-            <div class="mb-3">
-              <label for="priceRange" class="form-label">Maximum Price: $<span id="priceValue">{{#if priceRange}}{{priceRange}}{{else}}1000+{{/if}}</span></label>
-              <input type="range" class="form-range" min="0" max="1000" step="10" id="priceRange" name="priceRange" value="{{#if priceRange}}{{priceRange}}{{else}}1000{{/if}}">
-              <div class="d-flex justify-content-between">
-                <small>$0</small>
-                <small>$1000+</small>
-              </div>
-            </div>
 
             <div class="mb-3">
               <label for="genre" class="form-label">Genre</label>

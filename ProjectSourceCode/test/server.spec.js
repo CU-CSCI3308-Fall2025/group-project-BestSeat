@@ -39,45 +39,88 @@ describe('Server!', () => {
 // Explanation: The testcase will call the /register API with the following input
 // and expects the API to return a status of 200 along with the "Success" message.
 
-describe('Testing Register API', () => {
+const uniqueEmail = `test${Date.now()}@email.com`;
+
+describe('Testing Register API - positive', () => {//proper registration test
   it('positive : /register', done => {
+    const uniqueEmailPositive = `test${Date.now()}@email.com`;
     chai
       .request(server)
       .post('/register')
-      .send({email: 'johndoe@email.com', password: 'pwd'})
+      .send({ email: uniqueEmailPositive, password: 'pwd' })
       .end((err, res) => {
-        expect(res).to.have.status(200);
-        expect(res.body.message).to.equals('Success');
+
+        res.should.have.status(200);
+        res.redirects[0].should.include('/login'); 
         done();
       });
   });
 });
 
 
-// negative Testcase :
-describe('Testing Register API', () => {
+describe('Testing Register API - negative', () => {//duplicate email test
   it('negative : /register', done => {
     chai
       .request(server)
       .post('/register')
-      .send({email: 'johndoeemail.com', password: 'pwd'})
+      .send({ email: uniqueEmail, password: 'pwd' })
       .end((err, res) => {
-        expect(res).to.have.status(400);
-        expect(res.body.message).to.equals('Invalid email format');
+
+        res.should.have.status(400);
+        res.text.should.include('Registration failed'); 
+        done();
+      });
+  });
+});
+
+before(done => {
+  chai.request(server)
+    .post('/register')
+    .send({ email: uniqueEmail, password: 'pwd'})
+    .end((err, res) => {
+      done();
+    });
+});
+
+
+describe('Testing Login API', () => {//positive login
+  it('positive : /login', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({ email: uniqueEmail, password: 'pwd' })
+      .end((err, res) => {
+        res.should.have.status(200);
+        res.redirects[0].should.include('/search');
         done();
       });
   });
 });
 
 
-describe('Testing Redirect', () => {
-  it('\test route should redirect to /login with 302 HTTP status code', done => {
+describe('Testing Login API', () => {//negative login wrong password
+  it('negative : /login - wrong password', done => {
     chai
       .request(server)
-      .get('/login')
+      .post('/login')
+      .send({ email: uniqueEmail, password: 'wrongpassword' })
       .end((err, res) => {
-        res.should.have.status(302); 
-        res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); 
+        res.should.have.status(200);
+        res.text.should.include('Invalid password');
+        done();
+      });
+  });
+});
+
+describe('Testing Login API', () => {//negative login non-existent user
+  it('negative : /login - non-existent user', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({ email: 'doesnotexist@email.com', password: 'pwd' })
+      .end((err, res) => {
+        res.should.have.status(200);
+        res.text.should.include('User not found');
         done();
       });
   });
