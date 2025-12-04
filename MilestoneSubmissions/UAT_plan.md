@@ -146,7 +146,7 @@ This test was successful because the user saw search results related to their ke
 ## Feature 4: Comparisons
 
 ### Feature Description
-Authenticated users can search for concert events using the Ticketmaster API. The application displays event details including name, date, time, and image.
+Authenticated users can search for event ticket options using the Rapid API. The application displays event details, including name, date, time, image, and location. The application displays options to purchase tickets from various ticket vendors of specific event. 
 
 ### Prerequisites
 - Application is running on `localhost:3000`
